@@ -130,7 +130,11 @@ void loop() {
     bar.read(values);
     Serial.print("  [ ");
     for (int i = 0; i < 8; i++) {
-        Serial.print(values[i], DEC);
+        if (values[i] > 1800) {
+            Serial.print(1, DEC);
+        } else {
+            Serial.print(0, DEC);
+        }
         Serial.print(" ");
     }
 

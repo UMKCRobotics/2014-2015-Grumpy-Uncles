@@ -4,6 +4,10 @@ class motor {
 		byte pin_two;
 		bool forward;
 
+		short fix_(short wrong) {
+			return(map(wrong, 255, 0, 0, 255));
+		}
+
 	public:
 		motor() { };
 
@@ -19,13 +23,13 @@ class motor {
 		void go_forward(byte throttle) {
 			forward = true;
 			digitalWrite(pin_two, HIGH);
-			analogWrite(pin_one, throttle);
+			analogWrite(pin_one, fix_(throttle));
 		}
 
 		void go_reverse(byte throttle) {
 			forward = false;
 			digitalWrite(pin_one, HIGH);
-			analogWrite(pin_two, throttle);
+			analogWrite(pin_two, fix_(throttle));
 		}
 
 		void stop() {
@@ -49,8 +53,8 @@ class motorCommander {
 		byte throttle;
 		byte speed_l;
 		byte speed_r;
-		#define SPEED_MIN 200
-		#define SPEED_MAX 100
+		#define SPEED_MIN 100
+		#define SPEED_MAX 200
 
 		dir::Cardinal current_direction;
 
@@ -73,7 +77,7 @@ class motorCommander {
 		LineSensors sen_bar;
 
 		void set_throttle() {
-			throttle = map(analogRead(throttle_pin), 0, 1023, 255, 0);
+			throttle = map(analogRead(throttle_pin), 0, 1023, 0, 255);
 		}
 
 	public:
@@ -88,11 +92,11 @@ class motorCommander {
 			//    a fraction of the front wheel's power. this
 			//    _should_ allow the bot to turn where we want.
 			//    (in-between the front wheels)
-			//rear_motor_ratio = .70909;
+			rear_motor_ratio = .70909;
 			// through experimentation, we need to adjust by the
 			//    difference (1 - rear_motor_ratio) to get the
 			//    adjusted speed for the wheels.
-			rear_motor_ratio = .29191;
+			//rear_motor_ratio = .29191;
 
 
 			// left side is backwards owing to pinning.
@@ -101,7 +105,7 @@ class motorCommander {
 
 			// a full revolution of the encoder is 1200 ticks.
 			quarter_revolution = 300;
-			quarter_turn = 750;
+			quarter_turn = 820;
 			one_foot = 1926;
 		}
 
@@ -154,6 +158,13 @@ class motorCommander {
             return(desired_direction);
 	    }
 
+		void STOP() {
+			left_front.stop();
+			left_rear.stop();
+			right_front.stop();
+			right_rear.stop();
+		}
+
 		// the boolean is for testing. pass false to ignore
 		//    any of the line following.
 		// it's worth noting that any throttle value greater
@@ -175,8 +186,8 @@ class motorCommander {
 			set_throttle();
 
 			// this define needs a better home
-			#define SCALING 1.01
-			#define S_SCALING 0.99
+			#define FAST_SCALING 1.01
+			#define SLOW_SCALING 0.99
 
 			// the initial push to begin moving forward.
 			left_front.go_forward(throttle);
@@ -184,6 +195,13 @@ class motorCommander {
 			right_front.go_forward(throttle);
 			right_rear.go_forward(throttle);
 			
+			// if we can get the second sensor set in the front
+			//    this shouldn't be needed anymore. the idea is
+			//    that the front sensor will already be past the
+			//    line and then the master stop condition will be
+			//    looking for when the front reads white and the
+			//    back reads black.
+			//
 			// this waits for the robot to move past a black line
 			do {
 				sen_bar.poll_sensors();
@@ -209,17 +227,17 @@ head_of_loop:
 					}
 				//Robot is off course and needs to correct right
 				} else if (!sen_bar.white(5)){
-					right_front.go_forward(throttle * SCALING);
-					right_rear.go_forward(throttle * SCALING);
-					left_front.go_forward(throttle * S_SCALING);
-					left_rear.go_forward(throttle * S_SCALING);
+					right_front.go_forward(throttle * FAST_SCALING);
+					right_rear.go_forward(throttle * FAST_SCALING);
+					left_front.go_forward(throttle * SLOW_SCALING);
+					left_rear.go_forward(throttle * SLOW_SCALING);
 					Serial.println("Drifting right");
 				//Robot is off course and needs to correct left
 				} else if (!sen_bar.white(2)){
-					left_front.go_forward(throttle * SCALING);
-					left_rear.go_forward(throttle * SCALING);
-					right_front.go_forward(throttle * S_SCALING);
-					right_rear.go_forward(throttle * S_SCALING);
+					left_front.go_forward(throttle * FAST_SCALING);
+					left_rear.go_forward(throttle * FAST_SCALING);
+					right_front.go_forward(throttle * SLOW_SCALING);
+					right_rear.go_forward(throttle * SLOW_SCALING);
 					Serial.println("Drifting left");
 				}
 
@@ -235,37 +253,6 @@ head_of_loop:
 			Serial.println("Back to black line");
 			STOP();
 			Serial.println("Stopped");
-		}
-
-		// shouldn't be used. here for completness.
-		void MOVE_BACKWARD() {
-			STOP();
-			set_throttle();
-			speed_l = throttle;
-
-			int32_t old_odo = (odo_left.read() + odo_right.read()) / 2;
-			int32_t current_odo;
-			bool stopped = false;
-
-			left_front.go_reverse(speed_l);
-			left_rear.go_reverse(speed_l);
-			right_front.go_reverse(speed_r);
-			right_rear.go_reverse(speed_r);
-
-			do {
-				// take an average of the current readings.
-				current_odo = (odo_left.read() + odo_right.read()) / 2;
-			} while ((old_odo - current_odo) < one_foot);
-			// using encoder ticks for now.
-			// can't get the line sensor to work.
-			STOP();
-		}
-
-		void STOP() {
-			left_front.stop();
-			left_rear.stop();
-			right_front.stop();
-			right_rear.stop();
 		}
 
 		void TURN_LEFT() {
@@ -287,11 +274,11 @@ head_of_loop:
 			// map the throttle into a 0(slow) -> 255(fast)
 			//    slope, multiply the ratio in to get the
 			//    adjusted speed for the rear motor.
-			speed_rear = rear_motor_ratio * 
-			             map(throttle, 255, 0, 0, 255);
+			speed_rear = rear_motor_ratio * throttle;
+			//             map(throttle, 255, 0, 0, 255);
 			// then take that difference and add it into our
 			//    motor's slope.
-			speed_rear += throttle;
+//			speed_rear += throttle;
 			left_front.go_reverse(throttle);
 			left_rear.go_reverse(speed_rear);
 			right_front.go_forward(throttle);
@@ -342,12 +329,11 @@ head_of_loop:
 			//    integer, but that's okay. we can afford to
 			//    lose some precision on this.
 //			speed_rear = throttle * rear_motor_ratio;
-			speed_rear = rear_motor_ratio * 
-			             map(throttle, 255, 0, 0, 255);
+			speed_rear = rear_motor_ratio * throttle;
+//			             map(throttle, 255, 0, 0, 255);
 			// then take that difference and add it into our
 			//    motor's slope.
-			speed_rear += throttle;
-
+//			speed_rear += throttle;
 			left_front.go_forward(throttle);
 			left_rear.go_forward(speed_rear);
 			right_front.go_reverse(throttle);
@@ -383,78 +369,6 @@ head_of_loop:
 			STOP();       
 		}
 
-/* holding off on this for a little while.
- * will need a LOT more pen-and-paper testing
- *    before we apply anything like this.
-		void TURN_RIGHT() {
-			// will delay by a set amount for now.
-			// need to use encoder data.
-			bool stop_l = false;
-			bool stop_r = false;
-			int32_t old_l = odo_left.read();
-			int32_t old_r = odo_right.read();
-			int32_t current_l;
-			int32_t current_r;
-			unsigned char sensor_state = '?';
-
-			set_throttle();
-			left_front.go_forward(throttle);
-			right_front.go_reverse(throttle);
-
-			do {
-				current_l = odo_left.read();
-				current_r = odo_right.read();
-
-				if (stop_l == false
-				&& (current_l - old_l) >= quarter_revolution) {
-					// once we're past the 'wait' distance,
-					//    stop the basic loop and then start
-					//    watching the sen_bar.poll_sensors()
-					//    return value
-					stop_l = true;
-				}
-				if (stop_r == false
-				&& (current_r - old_r) >= quarter_revolution) {
-					// once we're past the 'wait' distance,
-					//    stop the basic loop and then start
-					//    watching the sen_bar.poll_sensors()
-					//    return value
-					stop_r = true;
-				}
-			} while (!(stop_l && stop_r));
-
-			// spin until the sensor bar says we've hit the
-			//    next full line.
-			do {
-				sensor_state = sen_bar.poll_sensors();
-			} while (sensor_state != LineSensors::LINE_FULL);
-
-			// then, we need to turn just a smidge more, so
-			//    twist for another quarter revolution of
-			//    the wheels.
-			stop_l = false;
-			stop_r = false;
-			do {
-				current_l = odo_left.read();
-				current_r = odo_right.read();
-
-				if (stop_l == false
-				&& (current_l - old_l) >= quarter_revolution / 2) {
-					left_front.stop();
-					stop_l = true;
-				}
-				if (stop_r == false
-				&& (old_r - current_r) >= quarter_revolution / 2) {
-					right_front.stop();
-					stop_r = true;
-				}
-			} while (!(stop_l && stop_r));
-
-            current_direction++;
-		}
- *
- * end quarantined code.
- */
 		int get_odo_left() {
 			return(odo_left.read());
 		}
