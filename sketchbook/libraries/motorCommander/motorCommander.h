@@ -175,7 +175,8 @@ class motorCommander {
 			set_throttle();
 
 			// this define needs a better home
-			#define SCALING 1.02
+			#define SCALING 1.01
+			#define S_SCALING 0.99
 
 			// the initial push to begin moving forward.
 			left_front.go_forward(throttle);
@@ -207,14 +208,18 @@ head_of_loop:
 						Serial.println("Going forward");
 					}
 				//Robot is off course and needs to correct right
-				} else if (!sen_bar.white(2)){
+				} else if (!sen_bar.white(5)){
 					right_front.go_forward(throttle * SCALING);
 					right_rear.go_forward(throttle * SCALING);
+					left_front.go_forward(throttle * S_SCALING);
+					left_rear.go_forward(throttle * S_SCALING);
 					Serial.println("Drifting right");
 				//Robot is off course and needs to correct left
-				} else if (!sen_bar.white(5)){
+				} else if (!sen_bar.white(2)){
 					left_front.go_forward(throttle * SCALING);
 					left_rear.go_forward(throttle * SCALING);
+					right_front.go_forward(throttle * S_SCALING);
+					right_rear.go_forward(throttle * S_SCALING);
 					Serial.println("Drifting left");
 				}
 
