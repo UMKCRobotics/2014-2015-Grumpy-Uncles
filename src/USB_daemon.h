@@ -43,10 +43,9 @@ class USB {
 			}
 			// open file in 'append' mode. this places the seek
 			//    pointer directly at the end.
-//			fopen(egg_file.c_str(), "a+");
-//			fprintf(egg_carton, "%d %c", cell, egg);
-//			fclose(egg_carton);
-
+			std::ofstream fout(egg_file.c_str(), std::ofstream::app);
+			fout << cell << " " << egg << std::endl;
+			fout.close();
 			// a good programmer will return the number of
 			//    bytes written, or some other error checking.
 		}

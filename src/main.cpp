@@ -226,10 +226,7 @@ int main(int argc, char* argv[]) {
 			//    returned to the start cell.
 			// this is currently broken.
 			if (cell == config->start()) {
-				marquee->light(LED::YELLOW | LED::RED);
-				// however, we should do more than just change the
-				//    LEDs. perhaps a stop, or a deadloop?
-				//    returning for now.
+				// no more work to do.
 				return(0);
 			}
 		} // end run
