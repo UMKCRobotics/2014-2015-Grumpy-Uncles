@@ -13,6 +13,6 @@ esac
 g++ -std=c++11 ./main.cpp -o gadget ${DEBUG} -I ../include -L ../lib -I/usr/include/opencv -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -ltesseract -lwait -ludev -lblkid -lcap -lario
 
 if [[ $? -eq 0 ]] ; then
-	echo "Compiled successfully. Applying CAPABILITIES"
+	echo "Compile successiful! Applying CAPABILITIES"
 	sudo setcap cap_sys_admin,cap_dac_read_search+ep ./gadget
 fi

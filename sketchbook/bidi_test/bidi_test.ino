@@ -91,10 +91,16 @@ void loop() {
                 mc.MOVE_FORWARD();
                 break;
             case 'a':
-                mc.TURN_LEFT();
+                mc.TURN_("LEFT");
                 break;
             case 'd':
-                mc.TURN_RIGHT();
+                mc.TURN_("RIGHT");
+                break;
+            case 'e':
+                mc.shimmy_right();
+                break;
+            case 'q':
+                mc.shimmy_left();
                 break;
             default:
                 break;

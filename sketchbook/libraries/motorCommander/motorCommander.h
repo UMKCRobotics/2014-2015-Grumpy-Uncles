@@ -124,8 +124,8 @@ class motorCommander {
 
 			left_front.attach ( 7,  6);
 			left_rear.attach  ( 4,  5);
-			right_front.attach( 8, 10);
-			right_rear.attach (12, 11);
+			right_rear.attach ( 8, 10);
+			right_front.attach(12, 11);
 
 			F_sen_bar.init(F_sen_pins, 6, F_thresh);
 			M_sen_bar.init(M_sen_pins, 8, M_thresh);
@@ -148,20 +148,38 @@ class motorCommander {
 					MOVE_FORWARD();
 					break;
 				case -3: case 1:
-					TURN_LEFT();
-				//	TURN_("LEFT");
+				//	TURN_LEFT();
+					TURN_("LEFT");
+					B_sen_bar.poll_sensors();
+					if((B_sen_bar.read_line() + 3000) < 0) {
+						shimmy_right(true);
+					} else {
+						shimmy_left(true);
+					}
 					MOVE_FORWARD();
 					break;
 				case -1: case 3:
-					TURN_RIGHT();
-				//	TURN_("RIGHT");
+				//	TURN_RIGHT();
+					TURN_("RIGHT");
+					B_sen_bar.poll_sensors();
+					if((B_sen_bar.read_line() + 3000) < 0) {
+						shimmy_right(true);
+					} else {
+						shimmy_left(true);
+					}
 					MOVE_FORWARD();
 					break;
 				case -2: case 2:
-					TURN_RIGHT();
-					TURN_RIGHT();
-				//	TURN_("RIGHT");
-				//	TURN_("RIGHT");
+				//	TURN_RIGHT();
+				//	TURN_RIGHT();
+					TURN_("RIGHT");
+					TURN_("RIGHT");
+					B_sen_bar.poll_sensors();
+					if((B_sen_bar.read_line() + 3000) < 0) {
+						shimmy_right(true);
+					} else {
+						shimmy_left(true);
+					}
 					MOVE_FORWARD();
 					break;
 			}
@@ -190,7 +208,7 @@ class motorCommander {
 			set_throttle();
 
 			// this define needs a better home
-			#define SCALING 0.03
+			#define SCALING 0.04
 			float FAST_SCALING = 1.00 + SCALING;
 			float SLOW_SCALING = 1.00 - SCALING;
 			int offset = 0;
@@ -283,35 +301,14 @@ class motorCommander {
 				right_front.go_forward(speed_r);
 				right_rear.go_forward(speed_r);
 
-//				if (!F_sen_bar.white(2) && !B_sen_bar.white(0) && !B_sen_bar.white(1)){
-//					Serial.println("MC :: FWD --> forward");
-//					left_front.go_forward(speed_l);
-//					left_rear.go_forward(speed_l);
-//					right_front.go_forward(speed_r);
-//					right_rear.go_forward(speed_r);
-//				}
-//
-//				if (!F_sen_bar.white(2)) {
-//					if (!M_sen_bar.white(2) || B_sen_bar.white(1)){
-//						Serial.println("MC :: FWD --> drifting right?");
-//						right_front.go_forward(speed_l*FAST_SCALING);
-//						left_front.go_forward(speed_r*SLOW_SCALING);
-//					} else if (!M_sen_bar.white(5) || B_sen_bar.white(0)){
-//						Serial.println("MC :: FWD --> drifting left?");
-//						left_front.go_forward(speed_l*FAST_SCALING);
-//						right_front.go_forward(speed_r*SLOW_SCALING);
-//					}
-//				}
-//
-//				if (B_sen_bar.white(1) && !M_sen_bar.white(2)){
-//					Serial.println("MC :: FWD --> HARD REAR RIGHT");
-//					right_rear.go_forward(speed_r*FAST_SCALING);
-//					left_rear.go_forward(speed_l*SLOW_SCALING);
-//				} else if (B_sen_bar.white(1) && !M_sen_bar.white(3)){
-//					Serial.println("MC :: FWD --> HARD REAR LEFT");
-//					left_rear.go_forward(speed_l*FAST_SCALING);
-//					right_rear.go_forward(speed_r*SLOW_SCALING);
-//				}
+				if (B_sen_bar.white(0) && B_sen_bar.white(1) && M_sen_bar.white(4)) {
+					STOP();
+					if (M_sen_bar.read_line() < 2000) {
+						shimmy_left();
+					} else if (M_sen_bar.read_line() > 2000) {
+						shimmy_right();
+					}
+				}
 
 				if (distance_moved > one_foot) {
 					stop_condition = true;
@@ -323,7 +320,6 @@ class motorCommander {
 					}
 				}
 			} while (stop_condition == false);
-//			} while (M_sen_bar.poll_sensors() == 0x81;
 
 			//Robot is back to black line and has moved forward a square
 			#ifdef GDEBUG
@@ -331,6 +327,154 @@ class motorCommander {
 			Serial.println("Stopped");
 			#endif
 			STOP();
+		}
+
+		void shimmy_left(bool turning = false) {
+			const int waggle = 300;
+			const int oldo_l = odo_left.read();
+			const int oldo_r = odo_right.read();
+			set_throttle();
+			const int allowed = 4;
+
+			bool stop_condition = false;
+			do {
+				B_sen_bar.poll_sensors();
+				M_sen_bar.poll_sensors();
+				if (abs(B_sen_bar.read_line() + 3000) < 10) {
+					if (abs(M_sen_bar.read_line() < 100)) {
+						if (turning) {
+							if (!M_sen_bar.white(0) && !M_sen_bar.white(7)) {
+								stop_condition = true;
+							}
+						} else {
+							stop_condition = true;
+						}
+					}
+				}
+
+				right_front.go_forward(throttle);
+				while (abs(odo_right.read() - oldo_l) < waggle);
+				right_front.stop();
+				if (abs(B_sen_bar.read_line() + 3000) < 10) {
+					if (abs(M_sen_bar.read_line() < 100)) {
+						if (turning) {
+							if (!M_sen_bar.white(0) && !M_sen_bar.white(7)) {
+								stop_condition = true;
+							}
+						} else {
+							stop_condition = true;
+						}
+					}
+				}
+
+				left_front.go_forward(throttle);
+				while (abs(odo_left.read() - oldo_r) < waggle);
+				left_front.stop();
+				if (abs(B_sen_bar.read_line() + 3000) < 10) {
+					if (abs(M_sen_bar.read_line() < 100)) {
+						if (turning) {
+							if (!M_sen_bar.white(0) && !M_sen_bar.white(7)) {
+								stop_condition = true;
+							}
+						} else {
+							stop_condition = true;
+						}
+					}
+				}
+
+				right_front.go_reverse(throttle);
+				while (odo_right.read() > oldo_l);
+				right_front.stop();
+				if (abs(B_sen_bar.read_line() + 3000) < 10) {
+					if (abs(M_sen_bar.read_line() < 100)) {
+						if (turning) {
+							if (!M_sen_bar.white(0) && !M_sen_bar.white(7)) {
+								stop_condition = true;
+							}
+						} else {
+							stop_condition = true;
+						}
+					}
+				}
+
+				left_front.go_reverse(throttle);
+				while (odo_left.read() > oldo_r);
+				left_front.stop();
+			} while(stop_condition == false);
+		}
+
+		void shimmy_right(bool turning = false) {
+			const int waggle = 300;
+			const int oldo_l = odo_left.read();
+			const int oldo_r = odo_right.read();
+			set_throttle();
+			const int allowed = 4;
+
+			bool stop_condition = false;
+			do {
+				B_sen_bar.poll_sensors();
+				M_sen_bar.poll_sensors();
+				if (abs(B_sen_bar.read_line() + 3000) < 10) {
+					if (abs(M_sen_bar.read_line() < 100)) {
+						if (turning) {
+							if (!M_sen_bar.white(0) && !M_sen_bar.white(7)) {
+								stop_condition = true;
+							}
+						} else {
+							stop_condition = true;
+						}
+					}
+				}
+
+				left_front.go_forward(throttle);
+				while (abs(odo_left.read() - oldo_l) < waggle);
+				left_front.stop();
+				if (abs(B_sen_bar.read_line() + 3000) < 10) {
+					if (abs(M_sen_bar.read_line() < 100)) {
+						if (turning) {
+							if (!M_sen_bar.white(0) && !M_sen_bar.white(7)) {
+								stop_condition = true;
+							}
+						} else {
+							stop_condition = true;
+						}
+					}
+				}
+
+				right_front.go_forward(throttle);
+				while (abs(odo_right.read() - oldo_r) < waggle);
+				right_front.stop();
+				if (abs(B_sen_bar.read_line() + 3000) < 10) {
+					if (abs(M_sen_bar.read_line() < 100)) {
+						if (turning) {
+							if (!M_sen_bar.white(0) && !M_sen_bar.white(7)) {
+								stop_condition = true;
+							}
+						} else {
+							stop_condition = true;
+						}
+					}
+				}
+
+				left_front.go_reverse(throttle);
+				while (odo_left.read() > oldo_l);
+				left_front.stop();
+				if (abs(B_sen_bar.read_line() + 3000) < 10) {
+					if (abs(M_sen_bar.read_line() < 100)) {
+						if (turning) {
+							if (!M_sen_bar.white(0) && !M_sen_bar.white(7)) {
+								stop_condition = true;
+							}
+						} else {
+							stop_condition = true;
+						}
+					}
+				}
+
+				right_front.go_reverse(throttle);
+				while (odo_right.read() > oldo_r);
+				right_front.stop();
+			} while(stop_condition == false);
 		}
 
 		void TURN_(const char* dir) {
@@ -377,7 +521,6 @@ class motorCommander {
 			do {
 				current_l = odo_left.read();
 				current_r = odo_right.read();
-				B_sen_bar.poll_sensors();
 
 				if ((stop_l == false) &&
 					(abs(current_l - old_l) >= quarter_turn)) {
@@ -391,22 +534,6 @@ class motorCommander {
 					right_front.stop();
 					right_rear.stop();
 					stop_r = true;
-				}
-
-				if (dir == "LEFT" || dir == "left") {
-					if (!B_sen_bar.white(1)) {
-						#ifdef GDEBUG
-						Serial.println("MC :: TURN_ --> reached desired stop condition");
-						#endif
-						stop_condition = true;
-					}
-				} else {
-					if (!B_sen_bar.white(0)) {
-						#ifdef GDEBUG
-						Serial.println("MC :: TURN_ --> reached desired stop condition");
-						#endif
-						stop_condition = true;
-					}
 				}
 
 				if (stop_r == true && stop_l == true) {
@@ -427,7 +554,6 @@ class motorCommander {
 			#ifdef GDEBUG
 			Serial.println("MC :: TL --> STOPPED");
 			#endif
-			delay(25);
 		}
 
 		void TURN_LEFT() {
