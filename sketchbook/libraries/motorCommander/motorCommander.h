@@ -85,14 +85,13 @@ class motorCommander {
 
 			// this number comes from Darren's magic trig bag.
 			// the idea here is that the rear motors are applied
-			//     a fraction of the front wheel's power. this
-			//     _should_ allow the bot to turn where we want.
-			//     (in-between the front wheels)
-			// owing to how the motor control board is currently
-			//     working, in order to go slower you need to
-			//     generate a throttle with a higher value.
-			// for now, I'll test with 1 + (Darren's Ratio)
-			//rear_motor_ratio = 1.70909;
+			//    a fraction of the front wheel's power. this
+			//    _should_ allow the bot to turn where we want.
+			//    (in-between the front wheels)
+			//rear_motor_ratio = .70909;
+			// through experimentation, we need to adjust by the
+			//    difference (1 - rear_motor_ratio) to get the
+			//    adjusted speed for the wheels.
 			rear_motor_ratio = .29191;
 
 
@@ -167,27 +166,38 @@ class motorCommander {
 		//
 		// for roundiness, let's do: 100 < speed < 200
 		void MOVE_FORWARD(bool follow = true) {
+			short odo_old = (odo_left.read() + odo_right.read())/2;
+			short current;
+			// make sure we're actually stopped.
 			STOP();
+
+			// call out and see what the throttle is at.
 			set_throttle();
-			Serial.println("Throttle set");
+
+			// this define needs a better home
 			#define SCALING 1.02
 
+			// the initial push to begin moving forward.
 			left_front.go_forward(throttle);
 			left_rear.go_forward(throttle);
 			right_front.go_forward(throttle);
 			right_rear.go_forward(throttle);
 			
-			Serial.print("Going forward at: ");
-			Serial.println(throttle);
-
+			// this waits for the robot to move past a black line
 			do {
 				sen_bar.poll_sensors();
 			} while(!sen_bar.white(0) || !sen_bar.white(7));
 			
-			Serial.println("Moved passed black line");
-
+		Serial.println("Moved passed black line");
+			short distance_moved;
 			do {
+head_of_loop:
+				current = (odo_left.read() + odo_right.read())/2;
+				distance_moved = abs(current-odo_old);
+				Serial.print("Distance Moved: ");
+				Serial.print(distance_moved, DEC);
 				sen_bar.poll_sensors();
+				//Robot is on the black line and is center
 				if (sen_bar.white(2) & sen_bar.white(5)){
 					if (!sen_bar.white(3) && !sen_bar.white(4)){
 						left_front.go_forward(throttle);
@@ -195,19 +205,28 @@ class motorCommander {
 						right_front.go_forward(throttle);
 						right_rear.go_forward(throttle);
 						Serial.println("Going forward");
-						continue;
 					}
+				//Robot is off course and needs to correct right
 				} else if (!sen_bar.white(2)){
 					right_front.go_forward(throttle * SCALING);
 					right_rear.go_forward(throttle * SCALING);
 					Serial.println("Drifting right");
+				//Robot is off course and needs to correct left
 				} else if (!sen_bar.white(5)){
 					left_front.go_forward(throttle * SCALING);
 					left_rear.go_forward(throttle * SCALING);
 					Serial.println("Drifting left");
 				}
-			
-			} while (sen_bar.white(0) & sen_bar.white(7));
+
+				if (distance_moved < (one_foot * .9)){
+					Serial.print(" < ");
+					Serial.println((one_foot * .9), DEC);
+					goto head_of_loop;
+				}
+				Serial.println(" > one_foot");
+			} while ((sen_bar.white(0) || sen_bar.white(7)));
+				
+			//Robot is back to black line and has moved forward a square
 			Serial.println("Back to black line");
 			STOP();
 			Serial.println("Stopped");
@@ -245,8 +264,7 @@ class motorCommander {
 		}
 
 		void TURN_LEFT() {
-			// will delay by a set amount for now.
-			// need to use encoder data.
+			//This using encoder data and a turn constant to properly turn
 			bool stop_l = false;
 			bool stop_r = false;
 			int32_t old_l = odo_left.read();
@@ -263,7 +281,7 @@ class motorCommander {
 			// trying a different scaling method.
 			// map the throttle into a 0(slow) -> 255(fast)
 			//    slope, multiply the ratio in to get the
-			//    difference of the motors' speed.
+			//    adjusted speed for the rear motor.
 			speed_rear = rear_motor_ratio * 
 			             map(throttle, 255, 0, 0, 255);
 			// then take that difference and add it into our
