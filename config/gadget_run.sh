@@ -2,8 +2,8 @@
 
 RUNLEVEL=$(echo "$(runlevel)" | cut -d ' ' -f 2)
 if [[ $RUNLEVEL -eq 4 ]]; then
-        echo "self-startup requested."
+	echo "self-startup requested."
+	cd ~/robot/mixer/src
+	./gadget
 fi
 
-cd ~/robot/mixer/src
-./gadget
