@@ -13,7 +13,7 @@
 
 #define nop() void()
 
-int main(void) {
+int main(int argc, char* argv[]) {
 	// if the UDEV symlink exists, use /dev/ardino
 	// if not, change this to  /dev/ttymxc3
 	const std::string serialport = "/dev/arduino";
@@ -22,8 +22,12 @@ int main(void) {
 	//    this allows tracking of files based on run times.
 	//    the only way that files could be overwritten is if
 	//    the HWCLOCK is reset to 0 ctime after a power-up.
-	const std::string egg_carton = filename::generate("config/", "egg");
-	const std::string map_file   = filename::generate("config/", "map");
+//	const std::string egg_carton = filename::generate("config/", "egg");
+//	const std::string map_file   = filename::generate("config/", "map");
+	const std::string egg_carton = "config/eggs";
+	const std::string map_file   = (argc == 2 ? argv[1] : "config/path");
+	std::cout << "MAIN :: egg file: " << egg_carton << std::endl;
+	std::cout << "MAIN :: map file: " << map_file << std::endl;
 
 	// OpenCV is pretty easy about its camera source.
 	//    you can (if you so desire) provide a movie
@@ -86,7 +90,7 @@ int main(void) {
 	// map[0] will contain a logical number referring to the cell
 	//    that the robot currently occupies. when storing, cast
 	//    the number to a (char), whern reading, cast as (short)
-	char map[50] = { };
+	char map[51] = { };
 	short cell =  0;
 	char cardinal = '?';	// '?' is used as a non-value
 	char egg = '?';			//     it is also a character
@@ -126,18 +130,21 @@ int main(void) {
 	// part 2 of any round
 	// not much to this so it's written first.
 	if (config->part() == 2) {
-
 		// the map is returned in order, as written to
 		//    the file and null-terminated.
 		config->loadPathFromDisk(map);
+		std::cout << "MAIN :: part(2) --> recovered path: ";
 		for(int cth = 0; map[cth] != '\0'; cth++) {
 			// get the next move in the path
-			cardinal = navigation::moveto(map[cth]);
+//			cardinal = navigation::moveto(map[cth]);
+			std::cout << map[cth] << " ";
 
 			// instruct the robot to move. this call blocks
 			//    until the robot is done moving.
-			arduino->moveCardinal(cardinal);
+//			arduino->moveCardinal(cardinal);
 		}
+		// that's all we do for part two.
+		return(2);
 
 	// part 1 of any round
 	// this is where a lot of the work is done.
@@ -145,8 +152,8 @@ int main(void) {
 		// start the USB daemon thread
 		// this better not block!
 		if (vision->isOpened()) {
-			std::cout << "MAIN :: vision is on, starting daemon.\n";
-			daemon? daemon->run() : nop();
+//			std::cout << "MAIN :: vision is on, starting daemon.\n";
+//			daemon? daemon->run() : nop();
 		} else {
 			// light up the yellow to indicate that
 			//    the camera did not start up.
@@ -202,6 +209,7 @@ int main(void) {
 			// have we reached the end cell?
 			if (cell == config->end()) {
 				marquee->light(LED::RED);
+				config->printMap(map);
 				config->storePathToDisk(map);
 				if (config->keepGoing()) {
 					continue; // from the top of the for loop

@@ -88,19 +88,39 @@ class Configurator {
 
 		void storePathToDisk(char map[]) {
 			// open output stream to file
+			std::cout << "CONFIG :: store() --> Path is: ";
 			std::ofstream fout(c_mapfile.c_str());
-			map[MYPOS] = c_start;
-			while (map[MYPOS] != c_end) {
+			map[MYPOS] = (char)c_start;
+			while (map[MYPOS] != (char)c_end) {
+				std::cout << map[map[MYPOS]] << " ";
 				fout << map[map[MYPOS]] << " ";
-				map[MYPOS] = map[map[MYPOS]];
+				map[MYPOS] = (char)navigation::moved((short)map[MYPOS], map[map[MYPOS]]);
 			}
+			std::cout << std::endl;
+			fout << std::endl;
 			// close output stream
 			fout.close();
 		}
+
+		void printMap(char map[]) {
+			std::cout << "CONFIG :: store() --> map:" << std::endl;
+			for (int rth = 0; rth < 7; rth++) {
+				std::cout << "\t";
+				for (int cth = 0; cth < 7; cth++) {
+					if (map[(rth*7) + cth + 1] == 0) {
+						std::cout << ".";
+					} else {
+						std::cout << map[(rth*7) + cth + 1];
+					}
+					std::cout << "  ";
+				}
+				std::cout << std::endl;
+			}
+		}
 		
 		void loadPathFromDisk(char map[]) {
+			std::cout << "CONFIG :: load() --> loading path from disk" << std::endl;
 			std::ifstream fin(c_mapfile.c_str());
-			std::string buffer;
 			
 			short step = 0;
 			while (fin >> map[step++]);

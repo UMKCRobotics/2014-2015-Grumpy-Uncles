@@ -4,6 +4,8 @@
 #include <cstdlib>		// exit()
 
 namespace navigation {
+	short moves_made = 0;
+
 	enum CARDINAL {
 		NORTH = 0,
 		EAST  = 1,
@@ -12,11 +14,12 @@ namespace navigation {
 	};
 
 	char moved(short last, const short cell) {
+		moves_made += 1;
 		switch(last - cell) {
-			case -7: return ('N'); break;
-			case -1: return ('W'); break;
-			case  1: return ('E'); break;
-			case  7: return ('S'); break;
+			case -7: return ('S'); break;
+			case -1: return ('E'); break;
+			case  1: return ('W'); break;
+			case  7: return ('N'); break;
 
 			// this indicates that we haven't moved.
 			//    perhaps we just turned in place?

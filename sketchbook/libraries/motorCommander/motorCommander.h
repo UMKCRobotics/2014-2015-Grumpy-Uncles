@@ -207,14 +207,11 @@ class motorCommander {
 				sen_bar.poll_sensors();
 			} while(!sen_bar.white(0) || !sen_bar.white(7));
 			
-		Serial.println("Moved passed black line");
 			short distance_moved;
 			do {
 head_of_loop:
 				current = (odo_left.read() + odo_right.read())/2;
 				distance_moved = abs(current-odo_old);
-				Serial.print("Distance Moved: ");
-				Serial.print(distance_moved, DEC);
 				sen_bar.poll_sensors();
 				//Robot is on the black line and is center
 				if (sen_bar.white(2) & sen_bar.white(5)){
@@ -223,7 +220,6 @@ head_of_loop:
 						left_rear.go_forward(throttle);
 						right_front.go_forward(throttle);
 						right_rear.go_forward(throttle);
-						Serial.println("Going forward");
 					}
 				//Robot is off course and needs to correct right
 				} else if (!sen_bar.white(5)){
@@ -231,28 +227,21 @@ head_of_loop:
 					right_rear.go_forward(throttle * FAST_SCALING);
 					left_front.go_forward(throttle * SLOW_SCALING);
 					left_rear.go_forward(throttle * SLOW_SCALING);
-					Serial.println("Drifting right");
 				//Robot is off course and needs to correct left
 				} else if (!sen_bar.white(2)){
 					left_front.go_forward(throttle * FAST_SCALING);
 					left_rear.go_forward(throttle * FAST_SCALING);
 					right_front.go_forward(throttle * SLOW_SCALING);
 					right_rear.go_forward(throttle * SLOW_SCALING);
-					Serial.println("Drifting left");
 				}
 
 				if (distance_moved < (one_foot * .9)){
-					Serial.print(" < ");
-					Serial.println((one_foot * .9), DEC);
 					goto head_of_loop;
 				}
-				Serial.println(" > one_foot");
 			} while ((sen_bar.white(0) || sen_bar.white(7)));
 				
 			//Robot is back to black line and has moved forward a square
-			Serial.println("Back to black line");
 			STOP();
-			Serial.println("Stopped");
 		}
 
 		void TURN_LEFT() {
