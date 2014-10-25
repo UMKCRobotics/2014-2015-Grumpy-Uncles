@@ -1,4 +1,6 @@
       
+    
+    
     Drive_Sys drive_system();
     IRsensors ir_sensors();
     LineSensors line_sensors();
@@ -7,6 +9,17 @@
     int maze_end = 15; //4x4 maze 
     
     bool openings [3];
+    
+    void uploadNextMove(byte cell_num){
+      
+    }
+    
+    void nextMove() {
+      // serial.readbyte
+      // nexitDirection = current_cell - cell_num : { +1, -1, +7, -7 }
+      // switch(next_direction) {
+        // moveCardinal(NORTH)
+      }
     
     Cardinal computeNextmove(Array<bool> &openings)
     {
