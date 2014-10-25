@@ -1,4 +1,4 @@
-enum class Cardinal {NORTH, EAST, SOUTH, WEST, END_OF_LIST };
+#define DEFAULT_SPEED 150
 
 /*
 // Special behavior for ++Cardinal
@@ -20,33 +20,31 @@ Cardinal operator++(Cardinal &c, int ) {
 
     class Motor_Cont{
       private:
-        int foward_pin;
+        int forward_pin;
         int backward_pin;
       public:
-        Motor_Cont(int n_foward, int n_backward){
-          foward_pin = n_foward;
-          backward_pin = n_backward;
-        }
+        Motor_Cont(int n_forward, int n_backward)
+          :forward_pin(n_forward), backward_pin(n_backward) {}
         
         void MC_Setup(){
-          pinMode(foward_pin, OUTPUT);
+          pinMode(forward_pin, OUTPUT);
           pinMode(backward_pin, OUTPUT);
         }
         
-        go_foward(int mvmt_speed) {
+        void go_forward(int mvmt_speed) {
             analogWrite(backward_pin, LOW);
             //slow code here
-            analogWrite(foward_pin, mvmt_speed);
+            analogWrite(forward_pin, mvmt_speed);
         }
         
-        go_backward(int mvmt_speed) {
-            analogWrite(foward_pin, LOW);
+        void go_backward(int mvmt_speed) {
+            analogWrite(forward_pin, LOW);
             //slow code here
             analogWrite(backward_pin, mvmt_speed);
         }
         
-        stop_mvmt(){
-          analogWrite(foward_pin, LOW);
+        void stop_mvmt(){
+          analogWrite(forward_pin, LOW);
           analogWrite(backward_pin, LOW);
         }
 
@@ -54,63 +52,81 @@ Cardinal operator++(Cardinal &c, int ) {
     
     class Drive_Sys{
       private:
-         int default_speed = 150;
+         Motor_Cont* MF_Left;
+         Motor_Cont* MB_Left;
+         Motor_Cont* MF_Right;
+         Motor_Cont* MB_Right;
+         
+         int turn_delay90 = 1000;
+    
+         int curr_direction = NORTH;
+         
+       public:
+       enum Cardinal {NORTH, EAST, SOUTH, WEST };
+       
+        Drive_Sys() {
+          MF_Left = new Motor_Cont(1, 2);
+          MB_Left = new Motor_Cont(3, 4);
+          MF_Right = new Motor_Cont(5, 6);
+          MB_Right = new Motor_Cont(7, 8);
+        }
+        
+        ~ Drive_Sys(){
+          delete MF_Left;
+          delete MB_Left;
+          delete MF_Right;
+          delete MB_Right;
+        }
+         void DS_Setup(){
          Motor_Cont MF_Left(1, 2);
          Motor_Cont MB_Left(3, 4);
          Motor_Cont MF_Right(5, 6);
          Motor_Cont MB_Right(7, 8);
-         
-         int turn_delay90 = 1000;
-    
-         Cardinal curr_direction = NORTH;
-         
-       public:
-        void DS_Setup(){
          MF_Left.MC_Setup();
          MB_Left.MC_Setup();
          MF_Right.MC_Setup();
          MB_Right.MC_Setup();
         }
-        void MOVE_FORWARD(int movement_speed = default_speed) {
-         MF_Left.go_foward(movement_speed);
-         MB_Left.go_foward(movement_speed);
-         MF_Right.go_foward(movement_speed);
-         MB_Right.go_foward(movement_speed);
+        void MOVE_FORWARD(int movement_speed = DEFAULT_SPEED) {
+         MF_Left->go_forward(movement_speed);
+         MB_Left->go_forward(movement_speed);
+         MF_Right->go_forward(movement_speed);
+         MB_Right->go_forward(movement_speed);
         }
         
-        void MOVE_BACKWARD(int movement_speed = default_speed){
-         MF_Left.go_backward(movement_speed);
-         MB_Left.go_backward(movement_speed);
-         MF_Right.go_backward(movement_speed);
-         MB_Right.go_backward(movement_speed);
+        void MOVE_BACKWARD(int movement_speed = DEFAULT_SPEED){
+         MF_Left->go_backward(movement_speed);
+         MB_Left->go_backward(movement_speed);
+         MF_Right->go_backward(movement_speed);
+         MB_Right->go_backward(movement_speed);
         }
         
-        Cardinal get_direction(){return curr_direction;}
+        int get_direction(){return curr_direction;}
         
-        void set_direction(Cardinal n_dirr) {curr_direction = n_dirr;}
+        void set_direction(int n_dirr) {curr_direction = n_dirr;}
         
         
         void STOP(){
-         MF_Left.stop_mvmt();
-         MR_Left.stop_mvmt();
-         MF_Right.stop_mvmt();
-         MB_Right.stop_mvmt();
+         MF_Left->stop_mvmt();
+         MB_Left->stop_mvmt();
+         MF_Right->stop_mvmt();
+         MB_Right->stop_mvmt();
         }
          
-         void TURN_RIGHT(){
-           this.STOP();
-           MF_Right.go_backward();
-           MF_Left.go_foward();
+         void TURN_RIGHT(int movement_speed = DEFAULT_SPEED){
+           STOP();
+           MF_Right->go_backward(movement_speed);
+           MF_Left->go_forward(movement_speed);
            delay(turn_delay90); 
-           this.STOP();
+           STOP();
          }
          
-         void TURN_LEFT(){
-           this.STOP();
-           MF_Left.go_backward();
-           MF_Right.go_foward();
+         void TURN_LEFT(int movement_speed = DEFAULT_SPEED){
+           STOP();
+           MF_Left->go_backward(movement_speed);
+           MF_Right->go_forward(movement_speed);
            delay(turn_delay90); 
-           this.STOP();
+           STOP();
          }
          
          void MOVE_CARDINAL(Cardinal direction_input){
@@ -126,17 +142,31 @@ Cardinal operator++(Cardinal &c, int ) {
                case 2: case -2:
                  TURN_RIGHT();
                  TURN_RIGHT();
-                 MOVE_FOWARD();
+                 MOVE_FORWARD();
                  break;
                case 3: case -1:
                  TURN_RIGHT();
-                 MOVE_FOWARD();
+                 MOVE_FORWARD();
                  break;
              }
              curr_direction = direction_input;
          }
 
     };
+    
+    Drive_Sys drive;
+    void setup(){
+      drive.DS_Setup();
+    }
+    void loop(){
+      drive.MOVE_FORWARD();
+      delay(2000);
+      drive.STOP();
+      drive.MOVE_BACKWARD();
+      delay(2000);
+      drive.MOVE_CARDINAL(Drive_Sys::WEST);
+      drive.STOP();
+    }
     
     /* will eventually need an input class that
        reads commands from the serial line to
