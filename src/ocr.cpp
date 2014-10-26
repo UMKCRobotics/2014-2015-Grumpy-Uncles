@@ -1,4 +1,4 @@
-#include <string
+#include <string>
 #include <stringstream>
 
 class OCR {
@@ -12,7 +12,7 @@ class OCR {
 			capture = new VideoCapture(dev);
 			if (!capture.isOpened()) {
 				std::cerr << "Failure to open default camera device '0'\n";
-				std::cerr << "\n\nBailing (for now)\n");
+				std::cerr << "\n\nBailing (for now)\n";
 				return(31);
 			}
 
