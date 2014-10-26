@@ -1,3 +1,6 @@
+#include <fstream>
+#include <string>
+
 class Configurator {
 	private:
 		char c_round;

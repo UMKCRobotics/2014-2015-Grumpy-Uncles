@@ -1,3 +1,6 @@
+#include <string
+#include <stringstream>
+
 class OCR {
 	private:
 		cv::VideoCapture* capture;

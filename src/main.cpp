@@ -1,27 +1,15 @@
+#include "ArduinoInterface.cpp"
+#include "Configurator.cpp"
+#include "OCR.cpp"
+
+#include <iostream>
+#include <string>
+
 int main(void){
 
-/* ---- turn this into an object ----
-	// read configuration values from arduino
-	while (readBytes() != null) {
-		// store information from the arduino
-	}
-
-	// set variables according to the data from the arduino
-	char start = 0;
-	char end = 0;
-
-	the configurator object will contain at least these attributes:
-	// these are 'char' to mach the size constraints
-	//    defined inside the arduino code.
-		char start
-		char end
-		char round { 1, 2, 3 }
-		char part { 1, 2 }
-			bool?
-
-*/		
-
-	string serialport = "/dev/udoo";
+	// if the UDEV symlink exists, use /dev/ardino
+	// if not, use /dev/ttymxc3
+	string serialport = "/dev/arduino";
 	int cameradevice = 0;
 	map<char, char> eggs;
 

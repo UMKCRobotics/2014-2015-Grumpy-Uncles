@@ -1,10 +1,30 @@
+#include <fstream>
+#include <string>
+
 class ArduinoInteface {
 	private:
+		ifstream ar_in;
+		ofstream ar_out;
 
 	public:
-		ArduinoInterface(FILE serialport) {
+		ArduinoInterface(string serialport) {
 			// connect to serialport
-			//    baud 115200
+			//    baud 115200 -- do NOT change this!
+			ar_in.open(serialport);
+			ar_out.open(serialport);
+
+			// or, in C:
+			// this will open the file as read/write in a single
+			//    file descriptor.
+			/*
+			 * int arduino = open(serialport.c_str(), O_RDWR);
+			 *
+			 */
+
+			// would probably be better to just use a third-party
+			//    serial library that can handle this. Connor gave
+			//    me a link to libserial(?). Will look into it.
+
 		}
 
 		// used in part 1
