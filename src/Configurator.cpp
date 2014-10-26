@@ -7,22 +7,23 @@ class Configurator {
 		char c_part;
 		char c_start;
 		char c_end;
-		string filename;
+		short MYPOS;
+		std::string c_filename;
 
 		bool searchRemainingTime;
 		
 	public:
-		Configurator(ArduinoInterface* interface, string filename) {
+		Configurator(ArduinoInterface* interface, std::string filename) {
 			// create serial connection to <serialport>
 			// block on read from arduino for:
 			//    byte for start
 			//    byte for end
 			//    int for speed
-			c_round = interface->readBytes(1);
-			c_part  = interface->readBytes(1);
-			c_start = interface->readBytes(1);
-			c_end   = interface->readBytes(1);
-
+			c_round = interface->serialReadBytes(1);
+			c_part  = interface->serialReadBytes(1);
+			c_start = interface->serialReadBytes(1);
+			c_end   = interface->serialReadBytes(1);
+			MYPOS = 0;
 			c_filename = filename;
 
 			// do we keep searching when we reach the end?
@@ -52,28 +53,28 @@ class Configurator {
 			return c_end;
 		}
 
-		void storePathToDisk(char* map) {
+		void storePathToDisk(short map) {
 			// open output stream to file
-			ofstream fout(c_filename);
-			map[0] = c_start;
-			while (map[0] != c_end) {
-				fout << map[map[0]] << ",";
-				map[0] = map[map[0]];
+			std::ofstream fout(c_filename.c_str());
+			map[MYPOS] = c_start;
+			while (map[MYPOS] != c_end) {
+				fout << map[map[MYPOS]] << ",";
+				map[MYPOS] = map[map[MYPOS]];
 			}
 			// close output stream
 			fout.close();
 		}
 		
-		void loadPathFromDisk(char* map) {
-			ifstream fin(c_filename);
-			map[0] = c_start;
-			string buffer;
-			readline(fin, buffer);
-			buffer.split(",");
-			// this is incorrect ..
-			for (int bth = 0; bth < buffer.size(); bth++) {
-				map[0] = buffer[bth++];
-				map[map[0]] = buffer[bth];
-			}
+		void loadPathFromDisk(short map) {
+		//	std::ifstream fin(c_filename.c_str());
+		//	std::string buffer;
+		//	
+		//	map[0] = c_start;
+		//	while(!fin.eof()) {
+		//		// store next move into current node
+		//		map[map[0]] << (char)fin;
+		//		// move cursor to next node
+		//		map[0] = map[map[0]];
+		//	}
 		}
-}
+};

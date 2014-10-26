@@ -1,5 +1,8 @@
+#include <opencv2/highgui/highgui.hpp>
+#include <tesseract/baseapi.h>
 #include <string>
-#include <stringstream>
+#include <sstream>
+#include <iostream>
 
 class OCR {
 	private:
@@ -9,11 +12,11 @@ class OCR {
 
 	public:
 		OCR(int dev) {
-			capture = new VideoCapture(dev);
-			if (!capture.isOpened()) {
+			capture = new cv::VideoCapture(dev);
+			if (!capture->isOpened()) {
 				std::cerr << "Failure to open default camera device '0'\n";
 				std::cerr << "\n\nBailing (for now)\n";
-				return(31);
+				exit(31);
 			}
 
 			tessa = new tesseract::TessBaseAPI();
@@ -27,14 +30,14 @@ class OCR {
 			delete(tessa);
 		}
 
-		void run() {
+		char run() {
 			// clear the buffer of any stray frames.
 			// EMG: I learned this 2013 with Wesley.
 			for (short dump = 0; dump < 10; dump++) {
-				cap >> frame;
+				*capture >> frame;
 			}
 			// capture a fresh (and so clean) frame from the camera
-			cap >> frame;
+			*capture >> frame;
 			// do your openCV magic here to clean up the image.
 
 			// do the tesseract thing.
@@ -47,7 +50,7 @@ class OCR {
 			tessa->Recognize(0);
 
 			// retreive all the output from tessa
-			std::string output(tess->GetUTF8Text());
+			std::string output(tessa->GetUTF8Text());
 			std::stringstream ss;
 
 			// this stringstream will allow us to filter the result
@@ -55,6 +58,7 @@ class OCR {
 			output.clear();
 			// grab the first non-whitespace character found
 			ss >> output;
-			return (output);
+			//  blech -- so hacky.
+			return (*output.c_str());
 		}
-}
+};

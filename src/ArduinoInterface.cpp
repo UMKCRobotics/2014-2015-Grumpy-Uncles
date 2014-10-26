@@ -1,17 +1,21 @@
 #include <fstream>
 #include <string>
 
-class ArduinoInteface {
+class ArduinoInterface {
 	private:
-		ifstream ar_in;
-		ofstream ar_out;
+		std::ifstream ar_in;
+		std::ofstream ar_out;
 
+		char STARTCODE;
+		char MAZECODE;
 	public:
-		ArduinoInterface(string serialport) {
+		ArduinoInterface(std::string serialport) {
+			STARTCODE = 0xFF;
+			MAZECODE = 0xFE;
 			// connect to serialport
 			//    baud 115200 -- do NOT change this!
-			ar_in.open(serialport);
-			ar_out.open(serialport);
+		//	ar_in.open(serialport);
+		//	ar_out.open(serialport);
 
 			// or, in C:
 			// this will open the file as read/write in a single
@@ -29,7 +33,7 @@ class ArduinoInteface {
 
 		// used in part 1
 		void start() {
-			serialWriteBytes(1, 0xFF);
+			serialWriteBytes(1, &STARTCODE);
 			// light GREEN and return nextCell as 64. this value
 			//    could be interpreted internally as the STARTCODE.
 			//
@@ -39,7 +43,7 @@ class ArduinoInteface {
 
 		// used in part 2
 		void runMaze() {
-			serialWriteBytes(1, 0xFE);
+			serialWriteBytes(1, &MAZECODE);
 			// light GREEN and return nextCell as 63.
 			//
 			// I'm hoping that the value 0xFE (or just 0x3E) can
@@ -103,6 +107,6 @@ class ArduinoInteface {
 		                 YELLOW = 0x80,
 		                 GREEN  = 0xC0 };
 		void light(char color) {
-			serialWriteBytes(1, color);
+			serialWriteBytes(1, &color);
 		}
-}
+};

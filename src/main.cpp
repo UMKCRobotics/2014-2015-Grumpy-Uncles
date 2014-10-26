@@ -9,9 +9,11 @@ int main(void){
 
 	// if the UDEV symlink exists, use /dev/ardino
 	// if not, use /dev/ttymxc3
-	string serialport = "/dev/arduino";
+	std::string serialport = "/dev/arduino";
 	int cameradevice = 0;
-	map<char, char> eggs;
+	std::map<short, char> eggs;
+	short map[50];
+	short MYPOS = 0;
 
 	ArduinoInterface* interface = new ArduinoInterface(serialport);
 	if (interface ==  NULL) {
@@ -52,8 +54,8 @@ int main(void){
 			nextMove = interface->serialreadbytes(1);
 		// and let the arduino drive the robot. Master will just be
 		//    for housekeeping and starting the camera/OCR.
-			map[map[0]] = nextMove;
-			map[0] = nextMove;
+			map[map[MYPOS]] = nextMove;
+			map[MYPOS] = nextMove;
 			// do we need to take a picture?
 			switch (config->round()) {
 				case 2: case 3:
@@ -65,9 +67,9 @@ int main(void){
 					//    not exist.
 					// so, if this is true, we haven't taken a
 					//    picture in this cell yet.
-					if (eggs.find(map[0]) == eggs.end() {
+					if (eggs.find(map[MYPOS]) == eggs.end() {
 						// fork()?
-						eggs.push_back(map[0], vision->run());
+						eggs.push_back(map[MYPOS], vision->run());
 					}
 					break;
 				default:
