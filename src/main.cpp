@@ -1,6 +1,6 @@
 #include "ArduinoInterface.cpp"
-#include "Configurator.cpp"
-#include "OCR.cpp"
+#include "configurator.cpp"
+#include "ocr.cpp"
 
 #include <iostream>
 #include <string>
