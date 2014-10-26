@@ -1,31 +1,43 @@
 class Configurator {
 	private:
-		short c_round;
-		short c_part;
+		char c_round;
+		char c_part;
 		char c_start;
 		char c_end;
 		string filename;
+
+		bool searchRemainingTime;
 		
 	public:
-		Configurator(FILE serialport, string filename) {
+		Configurator(ArduinoInterface* interface, string filename) {
 			// create serial connection to <serialport>
 			// block on read from arduino for:
 			//    byte for start
 			//    byte for end
 			//    int for speed
-			serialreadbyte(serialport, c_round);
-			serialreadbyte(serialport, c_part);
-			serialreadbyte(serialport, c_start);
-			serialreadbyte(serialport, c_end);
+			c_round = interface->readBytes(1);
+			c_part  = interface->readBytes(1);
+			c_start = interface->readBytes(1);
+			c_end   = interface->readBytes(1);
 
 			c_filename = filename;
+
+			// do we keep searching when we reach the end?
+			// this will need to be better handled.
+			// perhaps some sort of timer that triggers when the
+			//    go button is pushed?
+			searchRemainingTime = false;
 		}
 
-		short round() {
+		bool keepGoing() {
+			return searchRemainingTime;
+		}
+
+		char round() {
 			return c_round;
 		}
 
-		short part() {
+		char part() {
 			return c_part;
 		}
 
