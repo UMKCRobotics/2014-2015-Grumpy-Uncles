@@ -1,5 +1,3 @@
-include "worldSensor.h"
-
 class mazeSolver{
   private:
     int current_pos = 0;
@@ -8,7 +6,6 @@ class mazeSolver{
     bool openings [3];
   public:
     enum walls{F, L, R};
-    enum Cardinal{NORTH, EAST, SOUTH, WEST};
 
     void nextMove() {
       // serial.readbyte
@@ -17,50 +14,51 @@ class mazeSolver{
         // moveCardinal(NORTH)
       }
     
-    Cardinal computeNextmove()
+    dir::Cardinal computeNextmove(dir::Cardinal curr_direction)
     {
       ws.detectOpenings(openings);
-      switch (curr_dirrection){
-        case NORTH:
+      switch (curr_direction){
+        case dir::NORTH:
           if (openings[R])
-            return EAST;
-          else if (openings[F]
-            return NORTH;
-          else if (openings[L]
-            return WEST;
+            return dir::EAST;
+          else if (openings[F])
+            return dir::NORTH;
+          else if (openings[L])
+            return dir::WEST;
           else
-            return SOUTH;
+            return dir::SOUTH;
             break;
-        case SOUTH:
+        case dir::SOUTH:
           if (openings[R])
-            return WEST;
-          else if (openings[F]
-            return SOUTH;
-          else if (openings[L]
-            return EAST;
+            return dir::WEST;
+          else if (openings[F])
+            return dir::SOUTH;
+          else if (openings[L])
+            return dir::EAST;
           else
-            return NORTH;
+            return dir::NORTH;
             break;
-         case EAST:
+         case dir::EAST:
            if (openings[R])
-            return SOUTH
-          else if (openings[F]
-            return EAST;
-          else if (openings[L]
-            return  NORTH;
+            return dir::SOUTH;
+          else if (openings[F])
+            return dir::EAST;
+          else if (openings[L])
+            return dir::NORTH;
           else
-            return EAST;
+            return dir::EAST;
             break;
-          case WEST:
+          case dir::WEST:
            if (openings[R])
-            return NORTH;
-          else if (openings[F]
-            return WEST;
-          else if (openings[L]
-            return SOUTH;
+            return dir::NORTH;
+          else if (openings[F])
+            return dir::WEST;
+          else if (openings[L])
+            return dir::SOUTH;
           else
-            return EAST;
+            return dir::EAST;
             break;
       }
     }
+};
  
