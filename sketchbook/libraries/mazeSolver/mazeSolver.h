@@ -1,19 +1,15 @@
-      
-    
-    
-    Drive_Sys drive_system();
-    IRsensors ir_sensors();
-    LineSensors line_sensors();
-    
+include "worldSensor.h"
+
+class mazeSolver{
+  private:
     int current_pos = 0;
     int maze_end = 15; //4x4 maze 
-    
+    worldSensor ws;
     bool openings [3];
-    
-    void uploadNextMove(byte cell_num){
-      
-    }
-    
+  public:
+    enum walls{F, L, R};
+    enum Cardinal{NORTH, EAST, SOUTH, WEST};
+
     void nextMove() {
       // serial.readbyte
       // nexitDirection = current_cell - cell_num : { +1, -1, +7, -7 }
@@ -21,8 +17,9 @@
         // moveCardinal(NORTH)
       }
     
-    Cardinal computeNextmove(Array<bool> &openings)
+    Cardinal computeNextmove()
     {
+      ws.detectOpenings(openings);
       switch (curr_dirrection){
         case NORTH:
           if (openings[R])
@@ -66,36 +63,4 @@
             break;
       }
     }
-    void setup() {
-      drive_system.DS_Setup();
-      ir_sensors.IR_Setup();
-      line_sensors.LS_Setup();
-
-      Serial.begin(9600);
-    }
-
-    void loop() {
-     
-      
-      /* check the serial line for input;
-         if input {
-           process command
-           flush input line
-         }
-         
-         switch (command) {
-           case motors:
-             send command to motors
-           case sensor:
-             read state of sensors
-             return values to the serial line?
-           case display:
-             write supplied data to the segment displays
-           default
-             do nothing
-         }
-         
-         (flush input and output again)
-      */
-    }
-
+ 

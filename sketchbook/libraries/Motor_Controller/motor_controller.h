@@ -65,10 +65,10 @@ Cardinal operator++(Cardinal &c, int ) {
        enum Cardinal {NORTH, EAST, SOUTH, WEST };
        
         Drive_Sys() {
-          MF_Left = new Motor_Cont(1, 2);
+          MF_Left = new Motor_Cont(9, 10);
           MB_Left = new Motor_Cont(3, 4);
-          MF_Right = new Motor_Cont(5, 6);
-          MB_Right = new Motor_Cont(7, 8);
+          MF_Right = new Motor_Cont(11, 3);
+          MB_Right = new Motor_Cont(1, 2);
         }
         
         ~ Drive_Sys(){
@@ -78,14 +78,10 @@ Cardinal operator++(Cardinal &c, int ) {
           delete MB_Right;
         }
          void DS_Setup(){
-         Motor_Cont MF_Left(1, 2);
-         Motor_Cont MB_Left(3, 4);
-         Motor_Cont MF_Right(5, 6);
-         Motor_Cont MB_Right(7, 8);
-         MF_Left.MC_Setup();
-         MB_Left.MC_Setup();
-         MF_Right.MC_Setup();
-         MB_Right.MC_Setup();
+         MF_Left->MC_Setup();
+         MB_Left->MC_Setup();
+         MF_Right->MC_Setup();
+         MB_Right->MC_Setup();
         }
         void MOVE_FORWARD(int movement_speed = DEFAULT_SPEED) {
          MF_Left->go_forward(movement_speed);
@@ -103,7 +99,7 @@ Cardinal operator++(Cardinal &c, int ) {
         
         int get_direction(){return curr_direction;}
         
-        void set_direction(int n_dirr) {curr_direction = n_dirr;}
+        void set_direction(int n_dir) {curr_direction = n_dir;}
         
         
         void STOP(){
@@ -150,6 +146,7 @@ Cardinal operator++(Cardinal &c, int ) {
                  break;
              }
              curr_direction = direction_input;
+	     //Communicate to master that we stopped moving
          }
 
     };
@@ -161,11 +158,8 @@ Cardinal operator++(Cardinal &c, int ) {
     void loop(){
       drive.MOVE_FORWARD();
       delay(2000);
-      drive.STOP();
-      drive.MOVE_BACKWARD();
+      drive.TURN_LEFT();
       delay(2000);
-      drive.MOVE_CARDINAL(Drive_Sys::WEST);
-      drive.STOP();
     }
     
     /* will eventually need an input class that
