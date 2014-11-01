@@ -6,13 +6,14 @@ class IRsensor{
     IRsensor(int n_pin, float n_const)
       :pin(n_pin), ir_const(n_const) {}
     
-    int getConst {return ir_const;}
+    float getConst() {return ir_const;}
     
     int getPin() {return pin;}
     
     float getDistance(){
       return ir_const*pow(analogRead(pin), -1.1);
-      
+    }
+    
 };
 
 
@@ -24,28 +25,28 @@ class IRsensors{
       yet-to-be-acquired line sensor library. */
       private:
         IRsensor* front;
-        /*IRsensor l_front;          
-        IRsensor r_front;          
-        IRsensor l_rear;
-        IRsensor r_rear;         
-          */
         IRsensor* left;
-        IRsensor* right
+        IRsensor* right;
+        /*IRsensor l_front;
+        IRsensor r_front;
+        IRsensor l_rear;
+        IRsensor r_rear;
+        */
       public:
         IRsensors(){
-          front = new IRsensor(0, 1621.5);
-          left = new IRsensor(1, 1611.5);
-          right = new IRsensor(2, 1600.5);
+          front = new IRsensor(0,1621.5);
+          left = new IRsensor(1,1611.5);
+          right = new IRsensor(2,1600.5);
         }
         
-        ~IRsensor{
+        ~IRsensors(){
           delete front;
           delete left;
           delete right;
         }
         
         bool check_front_wall(){
-          if (front.getDistance() < 3){
+          if (front->getDistance() < 3){
             return true;
           }
           
@@ -55,7 +56,7 @@ class IRsensors{
         }
         
         bool check_right_wall(){
-          if (right.getDistance() < 3){
+          if (right->getDistance() < 3){
             return true;
           }
           
@@ -65,7 +66,7 @@ class IRsensors{
         }
         
         bool check_left_wall(){
-         if (left.getDistance() < 3){
+          if (left->getDistance() < 3){
             return true;
           }
           
