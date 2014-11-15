@@ -2,20 +2,11 @@ include "worldSensor.h"
 
 class mazeSolver{
   private:
-    int current_pos = 0;
-    int maze_end = 15; //4x4 maze 
     worldSensor ws;
     bool openings [3];
   public:
-    enum walls{F, L, R};
-    enum Cardinal{NORTH, EAST, SOUTH, WEST};
-
-    void nextMove() {
-      // serial.readbyte
-      // nexitDirection = current_cell - cell_num : { +1, -1, +7, -7 }
-      // switch(next_direction) {
-        // moveCardinal(NORTH)
-      }
+    enum walls{R, F, L};
+    enum Cardinal{NORTH,EAST,SOUTH,WEST};
     
     Cardinal computeNextmove()
     {
