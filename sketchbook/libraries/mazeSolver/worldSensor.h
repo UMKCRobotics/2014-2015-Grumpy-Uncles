@@ -13,7 +13,7 @@ class IRsensor{
     
     float getDistance(){
       return ir_const*pow(analogRead(pin), -1.1);
-    
+    }
 };
 
 
