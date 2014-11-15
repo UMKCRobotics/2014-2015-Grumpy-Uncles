@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #define DEFAULT_SPEED 150
 
 /*
