@@ -59,10 +59,9 @@ Cardinal operator++(Cardinal &c, int ) {
          
          int turn_delay90 = 1000;
     
-         int curr_direction = NORTH;
+         int curr_direction = dir::NORTH;
          
        public:
-       enum Cardinal {NORTH, EAST, SOUTH, WEST };
        
         Drive_Sys() {
           MF_Left = new Motor_Cont(9, 10);
@@ -125,7 +124,7 @@ Cardinal operator++(Cardinal &c, int ) {
            STOP();
          }
          
-         void MOVE_CARDINAL(Cardinal direction_input){
+         void MOVE_CARDINAL(dir::Cardinal direction_input){
              int desired_direction = curr_direction - direction_input;
              switch (desired_direction){
                case 0:
@@ -150,19 +149,3 @@ Cardinal operator++(Cardinal &c, int ) {
          }
 
     };
-    
-    Drive_Sys drive;
-    void setup(){
-      drive.DS_Setup();
-    }
-    void loop(){
-      drive.MOVE_FORWARD();
-      delay(2000);
-      drive.TURN_LEFT();
-      delay(2000);
-    }
-    
-    /* will eventually need an input class that
-       reads commands from the serial line to
-       control the motor drive_system */
- 
