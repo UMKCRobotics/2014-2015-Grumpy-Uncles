@@ -11,7 +11,6 @@ int main(void){
 	// if not, use /dev/ttymxc3
 	std::string serialport = "/dev/arduino";
 	int cameradevice = 0;
-	std::map<short, char> eggs;
 	short map[50];
 	short MYPOS = 0;
 
@@ -43,45 +42,35 @@ int main(void){
 			arduinoInterface->moveCardinal(map[mth]);
 		}
 	} else {
+		LEDs->light(GREEN);
 		#define EVER ;;
 		for (EVER) {
 		// part 1 of any round
-			interface->light(ArduinoInterface::GREEN);
-
+		
 		// this might be useless. the robot will be waiting on
 		//    the 'GO' button to pressed which is attached to
 		//    the arduino side anyway.
 		//	interface->start();
 		// 
 		// from the above, that means we just block on this line:
-			nextMove = interface->serialreadbytes(1);
+			nextMove = interface->serialReadbytes(1);
 		// and let the arduino drive the robot. Master will just be
 		//    for housekeeping and starting the camera/OCR.
+			navigation::addCurrentNodeplusCardinaltoPath(map,nextMove);
 			map[map[MYPOS]] = nextMove;
-			map[MYPOS] = nextMove;
+			
 			// do we need to take a picture?
 			switch (config->round()) {
 				case 2: case 3:
-					// if eggs already contains a key matching
-					//    our current cell (map[0]) skip.
-					// this happens by asking the eggs container
-					//    if it knows where our current cell is.
-					//    it will return eggs.end() if it does
-					//    not exist.
-					// so, if this is true, we haven't taken a
-					//    picture in this cell yet.
-					if (eggs.find(map[MYPOS]) == eggs.end() {
-						// fork()?
-						eggs.push_back(map[MYPOS], vision->run());
-					}
+					vision->run(map[MYPOS]));
 					break;
 				default:
 					// do nothing.
 					break;
 			}
 
-			if (current_cell == config->end()) {
-				interface->light(ArduinoInterface::RED);
+			if (map[MYPOS] == config->end()) {
+				LEDS->light(RED);
 				config->storePathToDisk(&map);
 				if (config->keepGoing()) {
 					continue;
