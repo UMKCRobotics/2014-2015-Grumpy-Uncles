@@ -38,7 +38,10 @@ int main(void){
 	if (config->part() == 2) {
 		// self running
 		config->loadPathFromDisk(&map);
-		interface->runMaze(savedpath);
+		//interface->runMaze(savedpath);
+		for(int mth = 0; map[mth] != 00; mth++) {
+			arduinoInterface->moveCardinal(map[mth]);
+		}
 	} else {
 		#define EVER ;;
 		for (EVER) {
