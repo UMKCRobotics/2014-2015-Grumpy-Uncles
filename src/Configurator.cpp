@@ -21,8 +21,21 @@ class Configurator {
 			//    int for speed
 			c_round = interface->serialReadBytes(1);
 			c_part  = interface->serialReadBytes(1);
-			c_start = interface->serialReadBytes(1);
-			c_end   = interface->serialReadBytes(1);
+			switch(c_round){
+				case 1:
+					c_start = 48;
+					c_end = 9;
+					break;
+				case 2:
+					c_start = 48;
+					c_end = 1;
+					break;
+				case 3:
+					c_start = 49;
+					c_end = 1;
+					break;
+			
+			}
 			MYPOS = 0;
 			c_filename = filename;
 
@@ -76,5 +89,6 @@ class Configurator {
 		//		// move cursor to next node
 		//		map[0] = map[map[0]];
 		//	}
+		// What to do if file isn't found?
 		}
 };
