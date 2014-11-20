@@ -17,10 +17,10 @@ class Billboard {
         #define S_K     0x0C70      // 'K'
         
         // is there a uint_16?
-        uint_16 digit_tens;
-        unit_16 digit_ones;
-        uint_32 display_full;
-        char display_pad;
+        uint16_t digit_ones;
+        uint16_t digit_tens;
+        char display_stream[5];
+        FILE segment_device;
         
     public:
         enum COLORS {
@@ -29,16 +29,24 @@ class Billboard {
             GREEN = 4
         };
         
-        Billboard() {
-            digit_tens = 0x00000000;
-            digit_ones = 0x00000000;
-            display_full = 0x00000000;
-            display_pad = 0x00;
+        Billboard(string devname) {
+        	// leading one for the segment display.
+        	segment_device = devname;
+        	display_stream[0] = 0x80;
+        	for (int dth = 1; dth < 5; dth++) {
+        		display_stream[dth];
+        	}
         }
         ~Billboard();
+
+        void xmit() {
+        	// open line to segment device
+			
+        }
         
         void light(int color) {
-            display_pad |= color;
+            display_pad |= (color << 1);
+            xmit();
         }
         
         void display(char cell_number) {
@@ -57,7 +65,7 @@ class Billboard {
             } else {
                 switch (ones) {
                     case 0:
-                        digit_ones = S_0;
+                        display_stream[0]
                         break;
                     case 1:
                         digit_ones = S_1;
@@ -131,10 +139,6 @@ class Billboard {
             display_full |= digit_tens;
         //  after this: 0b0001ooooooooooooootttttttttttttt
 
-            xmit(display_full);
-        //  for now, display_pad is empty (0's), but can be used to set
-        //     decimal points and access the four other pins on the board.
-        //     this will be the location of 
-            xmit(display_pad);
+            xmit();
         } // end (display(cell_number))
 };
