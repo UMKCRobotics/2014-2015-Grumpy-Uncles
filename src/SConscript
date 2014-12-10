@@ -17,11 +17,12 @@ def recursiveGlob(dir,filter_predicate):
     		return matches		
 
 #recursively traverse this dir and find files with .cpp in them
-files = recursiveGlob('.', lambda a: ".cpp" in a)
+#files = recursiveGlob('.', lambda a: ".cpp" in a)
+files = recursiveGlob('.', lambda a: a.endswith("*cpp"))
 
 #uncomment these if the build system breaks
-print("Project files")
-print(files)
+#print "Project files"
+#print files
 
 #create objects from these
 objs = env.Object(files)

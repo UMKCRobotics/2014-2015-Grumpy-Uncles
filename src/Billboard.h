@@ -1,4 +1,7 @@
-class Billboard {
+#include <stdint.h>
+#include <string>
+
+class LEDs {
     private:
         #define START   0x0001
         #define S_0     0x093F      // zero
@@ -13,12 +16,15 @@ class Billboard {
     //  #define S_7     0x0007      // seven
         #define S_8     0x00FF      // eight
         #define S_9     0x00E7      // nine
-        #define S_O     0x003F      // 'O' (oh)
-        #define S_K     0x0C70      // 'K'
+        #define S_Oh    0x003F      // 'O' (oh)
+        #define S_Kay   0x0C70      // 'K'
         
         // is there a uint_16?
         uint16_t digit_ones;
         uint16_t digit_tens;
+        int display_full;
+        char display_color;
+
         char display_stream[5];
         FILE segment_device;
         
@@ -29,43 +35,46 @@ class Billboard {
             GREEN = 4
         };
         
-        Billboard(string devname) {
-        	// leading one for the segment display.
-        	segment_device = devname;
+        LEDs(std::string devname) {
+        	// open the device
+        	//segment_device = devname;
+
+        	// set a leaading one in the display array
         	display_stream[0] = 0x80;
         	for (int dth = 1; dth < 5; dth++) {
         		display_stream[dth];
         	}
         }
-        ~Billboard();
+        ~LEDs();
 
         void xmit() {
         	// open line to segment device
-			
+        	// write(display_full);
+        	// write(display_color);
         }
         
         void light(int color) {
-            display_pad |= (color << 1);
+            display_color |= (color << 1);
             xmit();
         }
         
-        void display(char cell_number) {
+        void display(short cell_number) {
             // grab the ones place
-            int ones = (cell_number % 10);
+            short ones = (cell_number % 10);
             // grab the tens place
-            int tens = (cell_number / 10);
+            short tens = (cell_number / 10);
             
             // assuming MSB to right
             // need to verify this with tests
             
             
             if (cell_number == 79) {    // matches 'O' (oh)
-                digit_tens = S_O;
-                digit_ones = S_K;
+                digit_tens = S_Oh;
+                digit_ones = S_Kay;
             } else {
                 switch (ones) {
                     case 0:
-                        display_stream[0]
+                        digit_ones = S_0;
                         break;
                     case 1:
                         digit_ones = S_1;

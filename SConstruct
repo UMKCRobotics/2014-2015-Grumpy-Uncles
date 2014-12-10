@@ -1,3 +1,8 @@
+# I don't know where it needs to go, but here's the manual command to compile
+#     the stuff in src/
+#
+#     g++ ./main.cpp -I../lib/2014-2015-Framework/include -L../lib/2014-2015-Framework/lib
+#           $(pkg-config --cflags --libs) -ltesseract -lblkid -ludev -lcap -lwait
 import subprocess
 import os
 import sys

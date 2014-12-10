@@ -66,7 +66,7 @@ class Configurator {
 			return c_end;
 		}
 
-		void storePathToDisk(short map) {
+		void storePathToDisk(char map[]) {
 			// open output stream to file
 			std::ofstream fout(c_filename.c_str());
 			map[MYPOS] = c_start;
@@ -78,7 +78,7 @@ class Configurator {
 			fout.close();
 		}
 		
-		void loadPathFromDisk(short map) {
+		void loadPathFromDisk(char map[]) {
 		//	std::ifstream fin(c_filename.c_str());
 		//	std::string buffer;
 		//	
@@ -90,5 +90,13 @@ class Configurator {
 		//		map[0] = map[map[0]];
 		//	}
 		// What to do if file isn't found?
+		}
+
+		bool wait_on_go() {
+			// read a GPIO pin for the 'GO' button.
+			// return a value based on its state
+			// I hope we can plug the btn into a GPIO.
+
+			return true;
 		}
 };
