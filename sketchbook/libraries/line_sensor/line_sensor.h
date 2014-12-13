@@ -1,10 +1,10 @@
 #include <QTRSensors.h>
 
 //LED Thresholds
-    int[] cMinOn; //white with LED on
+    /*int[] cMinOn; //white with LED on
     int[] cMaxOn; //black with LED on
     int[] cMinOff; //white with LED off
-    int[] cMaxOff;  //black with LED off
+    int[] cMaxOff;  //black with LED off*/
 
     class LineSensors {
     /* this will be altered in the future.
@@ -29,8 +29,8 @@
         
         byte poll_sensors() {
           byte sensor_state = 0x00;
-          int sensor_values[8] = { 0 };
-          bar.read(&sensor_values); //use readCalibrated if using calibration
+          unsigned int sensor_values[8];
+          bar.read(sensor_values); //use readCalibrated if using calibration
           
           for (int ith = 0; ith < 8; ith++) {
             if (sensor_values[ith] > threshold) {
@@ -49,3 +49,4 @@
         }
          
     };
+
