@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "/home/umkc/robot/arduino/2014-2015-Grumpy-Uncles/sketchbook/libraries/Cardinal/Cardinal.h"
 
 #define DEFAULT_SPEED 150
 
@@ -60,8 +61,7 @@ Cardinal operator++(Cardinal &c, int ) {
          motor* MB_Right;
          
          int turn_delay90 = 1000;
-         enum Cardinal {NORTH, EAST, SOUTH, WEST };
-         Cardinal current_direction = NORTH;
+         dir::Cardinal current_direction = dir::NORTH;
          
        public:
        
@@ -100,9 +100,9 @@ Cardinal operator++(Cardinal &c, int ) {
          MB_Right->go_backward(movement_speed);
         }
         
-        Cardinal get_direction(){return current_direction;}
+        dir::Cardinal get_direction(){return current_direction;}
         
-        void set_direction(Cardinal n_dir) {current_direction = n_dir;}
+        void set_direction(dir::Cardinal n_dir) {current_direction = n_dir;}
         
         
         void STOP(){
@@ -128,7 +128,7 @@ Cardinal operator++(Cardinal &c, int ) {
            STOP();
          }
          
-         void moveCardinal(Cardinal direction_input){
+         void moveCardinal(dir::Cardinal direction_input){
              int desired_direction = current_direction - direction_input;
              switch (desired_direction){
                case 0:
