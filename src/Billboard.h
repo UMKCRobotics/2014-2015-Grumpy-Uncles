@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <string>
 
-class LEDs {
+class LED {
     private:
         #define START   0x0001
         #define S_0     0x093F      // zero
@@ -35,7 +35,7 @@ class LEDs {
             GREEN = 4
         };
         
-        LEDs(std::string devname) {
+        LED(std::string devname) {
         	// open the device
         	//segment_device = devname;
 
@@ -45,7 +45,7 @@ class LEDs {
         		display_stream[dth];
         	}
         }
-        ~LEDs();
+        ~LED();
 
         void xmit() {
         	// open line to segment device

@@ -19,8 +19,8 @@ class Configurator {
 			//    byte for start
 			//    byte for end
 			//    int for speed
-			c_round = interface->serialReadBytes(1);
-			c_part  = interface->serialReadBytes(1);
+			c_round = interface->readByte();
+			c_part  = interface->readByte();
 			switch(c_round){
 				case 1:
 					c_start = 48;

@@ -25,7 +25,7 @@ namespace navigation {
 			default:
 				std::cerr << "NAV :: add --> failure: distance " << distance
 						  << " unrecognized. FATAL.\n";
-				exit(20);
+				exit(21);
 		}
 
 		map[0] = (char)cell;

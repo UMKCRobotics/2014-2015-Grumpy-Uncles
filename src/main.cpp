@@ -22,30 +22,30 @@ int main(void) {
 	// map is an array of CARDINALS, in human-redable form: N, W, S, E
 	char map[50];
 
-	ArduinoInterface* interface = new ArduinoInterface(serialport);
-	if (interface ==  NULL) {
+	ArduinoInterface* arduino = new ArduinoInterface(serialport);
+	if (arduino ==  NULL) {
 		std::cerr << "MAIN :: failed on (arduino <> master) interface\n";
 		std::cerr << "MAIN :: FATAL -- bailing.\n";
-		exit (31);
+		exit (11);
 	}
-	Configurator* config = new Configurator(interface, path_file);
+	Configurator* config = new Configurator(arduino, path_file);
 	if (config ==  NULL) {
 		std::cerr << "MAIN :: failed on CONFIGURATOR\n";
 		std::cerr << "MAIN :: FATAL -- bailing.\n";
-		exit (32);
+		exit (12);
 	}
 	OCR* vision = new OCR(cameradevice);
 	if (vision ==  NULL) {
 		std::cerr << "MAIN :: failed on Camera/OCR interface\n";
 		std::cerr << "MAIN :: FATAL -- bailing.\n";
-		exit (33);
+		exit (13);
 	}
 
-	LEDs* marquee = new LEDs(billboard);
+	LED* marquee = new LED(billboard);
 	if (marquee == NULL) {
-		std::cerr << "MAIN :: failed on LED/Segment displau\n";
+		std::cerr << "MAIN :: failed on LED/Segment display\n";
 		std::cerr << "MAIN :: NON-fatal. continuing\n";
-	//	exit (34);
+	//	exit (14);
 	}
 
 // this object, on instantiation, needs to check for the
@@ -54,7 +54,7 @@ int main(void) {
 	if (daemon == NULL) {
 		std::cerr << "MAIN :: failed on USB daemon\n";
 		std::cerr << "MAIN :: NON-fatal. continuing.\n";
-	//	exit (35);
+	//	exit (15);
 	}
 
 	short cell =  0;
@@ -64,27 +64,34 @@ int main(void) {
 	
 	// indicate to the operator that we are 'GO' and waiting for the
 	//    button to be pressed.
-	marquee->light(LEDs::YELLOW);
+	marquee->light(LED::YELLOW);
 	while (config->wait_on_go()) {
 		// do nothing until the button is pressed.
 	}
+
+	// the button has been pressed. let's move out of
+	//    the start and begin the maze.
+	// is there an easter egg in the cell here?
+	marquee->light(LED::GREEN);
 
 	if (config->part() == 2) {
 		// part 2 of any round
 		// not much to this so it's written first.
 
-		marquee->light(LEDs::GREEN);
 		// self running
 		config->loadPathFromDisk(map);
-		//interface->runMaze(savedpath);
+		//arduino->runMaze(savedpath);
 		for(int cth = 0; map[cth] != '\0'; cth++) {
-			interface->moveCardinal(map[cth]);
+			// the following call blocks until the robot
+			//    is done moving.
+			arduino->moveCardinal(map[cth]);
 		}
 	} else {
-		marquee->light(LEDs::GREEN);
 		// part 1 of any round
 		daemon->run();		// start the USB daemon thread
 							// this better not block!
+		arduino->proceed();
+
 		#define EVER ;;
 		for (EVER) {
 		
@@ -93,7 +100,7 @@ int main(void) {
 			//    moved to another cell. the cell number is passed up
 			//    and we use that information for storage and any eggs
 			//    we find in this cell.
-			cell = interface->serialReadBytes(1);
+			cell = arduino->readByte();
 			marquee->display(cell);
 
 			// and let the arduino drive the robot. Master will just be
@@ -124,12 +131,12 @@ int main(void) {
 					// regardless of what round we're in, the next
 					//    step is to move. We need to let the lower
 					//    half know that we're done processing.
-					interface->proceed();
+					arduino->proceed();
 					break;
 			}
 
 			if (cell == config->end()) {
-				marquee->light(LEDs::RED);
+				marquee->light(LED::GREEN | LED::YELLOW);
 				config->storePathToDisk(map);
 				if (config->keepGoing()) {
 					continue;
