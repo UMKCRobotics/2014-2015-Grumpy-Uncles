@@ -8,52 +8,81 @@
 
 class ArduinoInterface {
 	private:
-		std::ifstream ar_in;
-		std::ofstream ar_out;
-
 		serialib arduino;
 		unsigned int timeout;
+		unsigned int baud;
 
 		char call;
 		char response;
 
-		char OP_START;
-		char OP_MAZE;
-		char OP_OK;
+		unsigned char OP_START;
+		unsigned char OP_OK;
+		unsigned char OP_SYN;
+		unsigned char OP_ACK;
 
 	public:
 		ArduinoInterface(std::string serialport) {
-			timeout = (ms(6)); // seconds (in ms)
-			if((arduino.Open(serialport.c_str(), 115200)) != 1) {
+			// set the time out. this is in milliseconds
+			timeout = (ms(6));
+
+			// baud rate. Udoo seems to prefer 115200.
+			baud = 115200;
+
+			if((arduino.Open(serialport.c_str(), baud)) != 1) {
 				std::cerr << "ARD_IF :: cannot open arduino device: " \
 				          << serialport << std::endl;
 				std::cerr << "ARD_IF :: this is very fatal. bailing.\n";
 				exit(41);
 			}
 
-			OP_START = 0xEE;
-			OP_MAZE = 0xDD;
-			OP_OK = 0xCC;
+			// trying to stay away from 0xFF .. -1 might
+			//    behave oddly in some situations.
+			OP_START = 0xE0;
+			OP_OK    = 0xE1;
+			OP_SYN   = 0xE2;
+			OP_ACK   = 0xE3;
+		}
+
+		~ArduinoInterface() {
+			arduino.Close();
 		}
 
 		char readByte() {
-			// read bytes until count hits 0.
-			// return number of bytes read
 			do {
-				call = arduino.ReadChar(&response, timeout);
-			} while (call <= 0);
+				response = arduino.ReadChar(&call, timeout);
+				// return values:
+				// 
+				//    -1 : failure
+				//     0 : timeout
+				//     1 : success
+			} while (response <= 0);
 
-			return(response);
+			return(call);
+		}
+
+		void writeByte(char message) {
+			arduino.WriteChar(message);
+		}
+
+		// no idea if this will work. but I think the idea
+		//    is solid.
+		// also not sure if this is even needed.
+		bool sync() {
+			do {
+				this->writeByte(OP_SYN);
+			} while((this->readByte()) != OP_ACK);
 		}
 
 		void moveCardinal(char cardinal) {
-			arduino.WriteChar(cardinal);
+			this->writeByte(cardinal);
 			do {
-				arduino.ReadChar(&response, timeout);
-			} while(response != OP_OK);
+				arduino.ReadChar(&call, timeout);
+				// until the lower half says it's ok,
+				//    we don't do anything.
+			} while(call != OP_OK);
 		}
 
 		void proceed() {
-			arduino.WriteChar(OP_START);
+			this->writeByte(OP_START);
 		}
 };

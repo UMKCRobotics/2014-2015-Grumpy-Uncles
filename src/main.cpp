@@ -64,7 +64,7 @@ int main(void) {
 	
 	// indicate to the operator that we are 'GO' and waiting for the
 	//    button to be pressed.
-	marquee->light(LED::YELLOW);
+	marquee->light(LED::COLORS::YELLOW);
 	while (config->wait_on_go()) {
 		// do nothing until the button is pressed.
 	}
