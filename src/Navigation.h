@@ -5,8 +5,10 @@
 
 namespace navigation {
 
+	// this function translates the provided cell number
+	//    into a cardinal based on the last position
 	void add_to_path(char map[], const int cell) {
-		short last_post = map[0];
+		short last_post = (short)map[0];
 		short distance  = last_post - cell;
 
 		switch(distance) {

@@ -4,6 +4,7 @@
 #include <cstdlib>		// exit
 
 #include "Navigation.h"
+#include "Filenames.h"
 #include "ArduinoInterface.h"
 #include "Configurator.h"
 #include "OCR.h"
@@ -15,12 +16,14 @@ int main(void) {
 	// if not, use /dev/ttymxc3
 	const std::string serialport = "/dev/arduino";
 	const std::string billboard  = "/dev/billboard";
-	const std::string egg_carton = "config/eggs.txt";
-	const std::string path_file  = "confing/path.ssv";
+//	generate filenames based on the current date and time.
+	const std::string egg_carton = filename::generate("config/", "egg");
+	const std::string map_file   = filename::generate("config/", "map");
 	const int cameradevice = 0;
 
 	// map is an array of CARDINALS, in human-redable form: N, W, S, E
-	char map[50];
+	// the empty braces initialize the array to all zeroes.
+	char map[50] = { };
 
 	ArduinoInterface* arduino = new ArduinoInterface(serialport);
 	if (arduino ==  NULL) {
@@ -28,7 +31,7 @@ int main(void) {
 		std::cerr << "MAIN :: FATAL -- bailing.\n";
 		exit (11);
 	}
-	Configurator* config = new Configurator(arduino, path_file);
+	Configurator* config = new Configurator(arduino, map_file);
 	if (config ==  NULL) {
 		std::cerr << "MAIN :: failed on CONFIGURATOR\n";
 		std::cerr << "MAIN :: FATAL -- bailing.\n";
@@ -58,7 +61,7 @@ int main(void) {
 	}
 
 	short cell =  0;
-	char egg = '|';			// '|' indicates a non-value
+	char egg = '?';			// '?' indicates a non-value
 							//     it is also a character
 							//     not used in the maze
 	
@@ -105,7 +108,6 @@ int main(void) {
 
 			// and let the arduino drive the robot. Master will just be
 			//    for housekeeping and starting the camera/OCR.
-			//navigation::addCurrentNodeplusCardinaltoPath(map, cell);
 			navigation::add_to_path(map, cell);
 			
 			// do we need to take a picture?
