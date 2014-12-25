@@ -31,7 +31,7 @@ class OCR {
 		}
 
 		// thread?
-		char run() {
+		char scan() {
 			// clear the buffer of any stray frames.
 			// EMG: I learned this 2013 with Wesley.
 			for (short dump = 0; dump < 10; dump++) {
