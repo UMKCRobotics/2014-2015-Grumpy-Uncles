@@ -8,7 +8,7 @@
 #include "ArduinoInterface.h"
 #include "Configurator.h"
 #include "OCR.h"
-#include "Billboard.h"
+#include "Segment.h"
 #include "USB_daemon.h"
 
 int main(void) {
