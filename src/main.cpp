@@ -13,7 +13,7 @@
 
 int main(void) {
 	// if the UDEV symlink exists, use /dev/ardino
-	// if not, use /dev/ttymxc3
+	// if not, change this to  /dev/ttymxc3
 	const std::string serialport = "/dev/arduino";
 
 	// making a udev rule would be pretty, but this
@@ -33,6 +33,9 @@ int main(void) {
 	//    N, W, S, E
 	//
 	// the empty braces initialize the array to all zeroes.
+	// map[0] will contain a logical number referring to the cell
+	//    that the robot currently occupies. when storing, cast
+	//    the number to a (char), whern reading, cast as (short)
 	char map[50] = { };
 
 	ArduinoInterface* arduino = new ArduinoInterface(serialport);
@@ -68,6 +71,7 @@ int main(void) {
 	//	exit (15);
 	}
 
+	char cardinal = 0;
 	short cell =  0;
 	char egg = '?';			// '?' indicates a non-value
 							//     it is also a character
@@ -79,6 +83,9 @@ int main(void) {
 	while (config->wait_on_go()) {
 		// do nothing until the button is pressed.
 	}
+
+	// ask the configurator where we're starting.
+	map[0] = (char)config->start();
 
 	// the button has been pressed. let's move out of
 	//    the start and begin the maze.
@@ -111,26 +118,21 @@ int main(void) {
 		
 			// from the above, that means we just block on this line:
 			// this line waits on the lower half to tell us that we've
-			//    moved to another cell. the cell number is passed up
-			//    and we use that information for storage and any eggs
-			//    we find in this cell.
-			cell = arduino->readByte();
+			//    moved. the lower half returns the cardinal that was
+			//    used to move - we then need to translate and store
+			//    the cell number that we've moved to.
+			cardinal = arduino->readByte();
+
+			// take where we were (map[0]) and find out where we are
+			//    based on the cardinal returned.
+			cell = navigation::moved((short)map[0], cardinal);
+
+			// display that to the world.
 			marquee->display(cell);
 
 			// keep track of where we've been so that we can eventually
 			//    solve this maze.
-			navigation::add_to_path(map, cell);
-			
-			// hav we reached the end cell?
-			if (cell == config->end()) {
-				marquee->light(LED::RED);
-				config->storePathToDisk(map);
-				if (config->keepGoing()) {
-					continue; // from the top of the for loop
-				} else {
-					break; // out of the for loop and stop
-				}
-			}
+			navigation::add_to_path(map, cell, cardinal);
 
 			// do we need to take a picture?
 			switch (config->round()) {
@@ -144,6 +146,25 @@ int main(void) {
 					//    just pass whatever was found to write out.
 					daemon->found_egg(cell, egg);
 					break;
+			}
+
+			// have we reached the end cell?
+			if (cell == config->end()) {
+				marquee->light(LED::RED);
+				config->storePathToDisk(map);
+				if (config->keepGoing()) {
+					continue; // from the top of the for loop
+				} else {
+					break; // out of the for loop and stop
+				}
+			}
+
+			// to be complete, we also check to see if we've
+			//    returned to the start cell.
+			if (cell == config->start()) {
+				marquee->light(LED::YELLOW | LED::RED)
+				// however, we should do more than just change the
+				//    LEDs. perhaps a stop, or a deadloop?
 			}
 		}
 		// end run

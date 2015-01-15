@@ -4,34 +4,26 @@
 #include <cstdlib>		// exit()
 
 namespace navigation {
+	short moved(short last, const char cardinal) {
+		switch(cardinal) {
+			case 'S': return (last + 7); break;
+			case 'E': return (last + 1); break;
+			case 'W': return (last - 1); break;
+			case 'N': return (last - 7); break;
+			// we should assume we didn't move.
+			default:  return (last);     break;
+		}
+	}
 
 	// this function translates the provided cell number
 	//    into a cardinal based on the last position
-	void add_to_path(char map[], const int cell) {
-		short last_post = (short)map[0];
-		short distance  = last_post - cell;
+	void add_to_path(char map[], const short cell, const char cardinal) {
+		// map[0]:   where i was
+		// cell:     where i am
+		// cardinal: where i moved
 
-		switch(distance) {
-			case -7:
-				map[cell] = 'S';
-				break;
-			case -1:
-				map[cell] = 'E';
-				break;
-			case  1:
-				map[cell] = 'W';
-				break;
-			case  7:
-				map[cell] = 'N';
-				break;
-			default:
-				std::cerr << "NAV :: add --> failure: distance " << distance
-						  << " unrecognized. FATAL.\n";
-				exit(21);
-		}
-
+		map[(short)map[0]] = cardinal;
 		map[0] = (char)cell;
-
 	}
 
 }
