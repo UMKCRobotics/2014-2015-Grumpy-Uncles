@@ -71,27 +71,24 @@ int main(void) {
 	//	exit (15);
 	}
 
-	char cardinal = 0;
 	short cell =  0;
 	char egg = '?';			// '?' indicates a non-value
 							//     it is also a character
 							//     not used in the maze
+	char cardinal = '?';
 	
-	// indicate to the operator that we are 'GO' and waiting for the
-	//    button to be pressed.
+	// indicate to the operator that we are 'READY' and
+	//    waiting for the go-button to be pressed.
 	marquee->light(LED::YELLOW);
 	while (config->wait_on_go()) {
 		// do nothing until the button is pressed.
 	}
 
 	// ask the configurator where we're starting.
-	map[0] = (char)config->start();
+	map[0] = cell = config->start();
 
-	// the button has been pressed. let's move out of
-	//    the start and begin the maze.
-	// is there an easter egg in the start cell?
-	//    if so, then we'll need to snap a picture
-	//    before we move.
+	// the button has been pressed. let's start with
+	//    turning the go light on.
 	marquee->light(LED::GREEN);
 
 	if (config->part() == 2) {
@@ -113,7 +110,9 @@ int main(void) {
 							// this better not block!
 		#define EVER ;;
 		for (EVER) {
-			// tell the arduino to move one cell
+			// tell the arduino to move one cell. if there's an egg
+			//    in the start cell, we won't catch it unless we
+			//    return there.
 			arduino->proceed();
 		
 			// from the above, that means we just block on this line:
