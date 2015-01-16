@@ -1,10 +1,13 @@
+#ifndef ARDUINOIF_H
+#define ARDUINOIF_H
+
 #include <fstream>
 #include <string>
 
 #include "Navigation.h"
 #include "serialib.h"
 
-#define ms(s) (1000 * s)
+#define seconds(s) (1000 * s)
 
 class ArduinoInterface {
 	private:
@@ -22,8 +25,8 @@ class ArduinoInterface {
 
 	public:
 		ArduinoInterface(std::string serialport) {
-			// set the time out. this is in milliseconds
-			timeout = (ms(6));
+			// set the time out. timeout expects milliseconds
+			timeout = (seconds(6));
 
 			// baud rate. Udoo seems to prefer 115200.
 			baud = 115200;
@@ -37,16 +40,18 @@ class ArduinoInterface {
 
 			// trying to stay away from 0xFF .. -1 might
 			//    behave oddly in some situations.
-			OP_START = 0xE0;
-			OP_OK    = 0xE1;
-			OP_SYN   = 0xE2;
-			OP_ACK   = 0xE3;
+			OP_MOVE = 0xE0;
+			OP_OK   = 0xE1;
+			OP_SYN  = 0xE2;
+			OP_ACK  = 0xE3;
 		}
 
 		~ArduinoInterface() {
 			arduino.Close();
 		}
 
+		// ALL READS WILL BLOCK. make sure that you are
+		//    aware of this before you use this function.
 		char readByte() {
 			do {
 				response = arduino.ReadChar(&call, timeout);
@@ -76,13 +81,15 @@ class ArduinoInterface {
 		void moveCardinal(char cardinal) {
 			this->writeByte(cardinal);
 			do {
-				arduino.ReadChar(&call, timeout);
+				call = this->readByte()
 				// until the lower half says it's ok,
 				//    we don't do anything.
 			} while(call != OP_OK);
 		}
 
 		void proceed() {
-			this->writeByte(OP_START);
+			this->writeByte(OP_MOVE);
 		}
 };
+
+#endif // ARDUINOIF_H

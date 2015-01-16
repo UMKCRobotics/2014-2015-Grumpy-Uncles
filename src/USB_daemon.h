@@ -1,3 +1,6 @@
+#ifndef USBWAIT_H
+#define USBWAIT_H
+
 #include "wait_for_usb.h"
 
 #include <cstdio>		// remove
@@ -52,3 +55,5 @@ class USB {
 			}
 		}
 };
+
+#endif // USBWAIT_H

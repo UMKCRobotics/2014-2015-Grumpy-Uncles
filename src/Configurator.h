@@ -1,3 +1,6 @@
+#ifndef CONFIGURATOR_H
+#define CONFIGURATOR_H
+
 #include <fstream>
 #include <string>
 
@@ -90,3 +93,5 @@ class Configurator {
 			return true;
 		}
 };
+
+#endif // CONFIGURATOR_H

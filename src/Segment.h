@@ -1,3 +1,6 @@
+#ifndef SEGMENT_H
+#define SEGMENT_H
+
 #include <stdint.h>     // uint16_t
 #include <string>
 
@@ -145,3 +148,5 @@ class LED {
             xmit();
         } // end (display(cell_number))
 };
+
+#endif // SEGMENT_H

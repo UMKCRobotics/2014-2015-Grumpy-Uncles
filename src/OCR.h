@@ -1,3 +1,6 @@
+#ifndef OCR_H
+#define OCR_H
+
 #include <opencv2/highgui/highgui.hpp>
 #include <tesseract/baseapi.h>
 #include <string>
@@ -103,3 +106,5 @@ class OCR {
 			return (*output.c_str());
 		}
 };
+
+#endif // OCR_H

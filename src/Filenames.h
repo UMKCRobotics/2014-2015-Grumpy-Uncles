@@ -1,3 +1,6 @@
+#ifndef FILENAMES_H
+#define FILENAMES_H
+
 #include <ctime>
 #include <string>
 #include <sstream>
@@ -27,3 +30,5 @@ namespace filename {
 		return (ss.str());
 	}
 }
+
+#endif // FILENAMES_H

@@ -1,3 +1,6 @@
+#ifndef SPIDEV_H
+#define SPIDEV_H
+
 #include <stdio.h>			// basic i/o
 #include <fcntl.h> 			// file i/o
 #include <stdlib.h>			// exit
@@ -89,19 +92,4 @@ class SPI {
 			
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif // SPIDEV_H

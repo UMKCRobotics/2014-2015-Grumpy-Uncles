@@ -1,3 +1,6 @@
+#ifndef BILLBOARD_H
+#define BILLBOARD_H
+
 #include <stdint.h> 	// uint16_t
 #include <string>
 
@@ -103,3 +106,5 @@ class LED {
 			xmit();
 		} // end (display(cell_number))
 };
+
+#endif // BILLBOARD_H

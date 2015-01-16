@@ -1,5 +1,5 @@
-#ifndef NAVIGATION_NS
-#define NAVIGATION_NS
+#ifndef NAVIGATION_H
+#define NAVIGATION_H
 
 #include <cstdlib>		// exit()
 
@@ -22,10 +22,12 @@ namespace navigation {
 		// cell:     where i am
 		// cardinal: where i moved
 
+		// store, in the location that we were, how we moved
 		map[(short)map[0]] = cardinal;
+		// store, in our cursor what cell we are in now
 		map[0] = (char)cell;
 	}
 
 }
 
-#endif
+#endif // NAVIGATION_H
