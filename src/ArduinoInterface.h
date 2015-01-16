@@ -7,7 +7,7 @@
 #include "Navigation.h"
 #include "serialib.h"
 
-#define seconds(s) (1000 * s)
+#define sectoms(s) (1000 * s)
 
 class ArduinoInterface {
 	private:
@@ -18,7 +18,7 @@ class ArduinoInterface {
 		char call;
 		char response;
 
-		unsigned char OP_START;
+		unsigned char OP_MOVE;
 		unsigned char OP_OK;
 		unsigned char OP_SYN;
 		unsigned char OP_ACK;
@@ -26,7 +26,7 @@ class ArduinoInterface {
 	public:
 		ArduinoInterface(std::string serialport) {
 			// set the time out. timeout expects milliseconds
-			timeout = (seconds(6));
+			timeout = (sectoms(6));
 
 			// baud rate. Udoo seems to prefer 115200.
 			baud = 115200;
@@ -81,7 +81,7 @@ class ArduinoInterface {
 		void moveCardinal(char cardinal) {
 			this->writeByte(cardinal);
 			do {
-				call = this->readByte()
+				call = this->readByte();
 				// until the lower half says it's ok,
 				//    we don't do anything.
 			} while(call != OP_OK);

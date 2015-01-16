@@ -14,8 +14,8 @@
 class SPI {
 	private:
 		struct _settings {
-			__u8  rw;
-			__u8  lead;
+			__u8  rwmode;
+			__u8  justification;
 			__u8  width;
 			__u32 speed;
 		} settings;
@@ -24,59 +24,52 @@ class SPI {
 
 		std::string devname;
 		int spidev;
-		bool OPEN;
+		int flags;
 
 	public:
 		SPI(std::string devname) : devname(devname) {
+			flags = O_WRONLY;
 
 		//	this.open();
-			if ((spidev = open(devname, flags)) < 0) {
-				fprintf(stderr, "SPI :: SPI() --> unable to open %s\n" devname);
-				fprintf(stderr, "SPI :: SPI() --> error: %s\n", strerror(errno));
-				OPEN = false;
-
-				fprintf(stderr, "SPI :: SPI() --> ultimately not fatal, but bailing.\n");
+			if ((spidev = open(devname.c_str(), flags)) < 0) {
+				std::cerr << "SPI :: SPI() --> unable to open " << devname << std::endl;
+				std::cerr << "SPI :: SPI() --> error: " << strerror(errno) << std::endl;
+				std::cerr << "SPI :: SPI() --> ultimately not fatal, but bailing.\n";
 				exit(51);
 			} else {
-				OPEN = true;
-
 				// these are magic for now. they should be replaced with tested
 				//    and working values later.
-				settings.mode = 0x01;
-				settings.lead = 0x01;
+				settings.rwmode = 0x01;
+				settings.justification = 0x01;
 				settings.width = 0x01;
 				payload.bits_per_word = settings.width;
 				settings.speed = 10000;
 				payload.speed_hz = settings.speed;
 
-				if (ioctl(spidev, SPI_IOC_WR_MODE, &settings.mode) < 0) {
-					fprintf(stderr, "SPI :: () -- > failure setting MODE of %s\n", argv[1]);
-					exit(12);
+				if (ioctl(spidev, SPI_IOC_WR_MODE, &settings.rwmode) < 0) {
+					std::cerr << "SPI :: () -- > failure setting MODE" << std::endl;
+					exit(52);
 				}
 
-				if (ioctl(spidev, SPI_IOC_WR_LSB_FIRST, &settings.lead) < 0) {
-					fprintf(stderr, "SPI :: () -- > failure setting BIT JUSTIFICATION of %s\n", argv[1]);
-					exit(12);
+				if (ioctl(spidev, SPI_IOC_WR_LSB_FIRST, &settings.justification) < 0) {
+					std::cerr << "SPI :: () -- > failure setting BIT JUSTIFICATION" << std::endl;
+					exit(53);
 				}
 
 				if (ioctl(spidev, SPI_IOC_WR_BITS_PER_WORD, &settings.width) < 0) {
-					fprintf(stderr, "SPI :: () -- > failure setting WORD LENGTH of %s\n", argv[1]);
-					exit(12);
+					std::cerr << "SPI :: () -- > failure setting WORD LENGTH" << std::endl;
+					exit(54);
 				}
 
 				if (ioctl(spidev, SPI_IOC_WR_MAX_SPEED_HZ, &settings.speed) < 0) {
-					fprintf(stderr, "SPI :: () -- > failure setting MAX SPEED of %s\n", argv[1]);
-					exit(12);
+					std::cerr << "SPI :: () -- > failure setting LINE SPEED" << std::endl;
+					exit(55);
 				}
 			}
 		}
 		
 		~SPI() {
-			close(devname);
-		}
-
-		bool open() {
-			return OPEN;
+			close(spidev);
 		}
 
 		void write(char buffer[]) {

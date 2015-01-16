@@ -161,7 +161,7 @@ int main(void) {
 			// to be complete, we also check to see if we've
 			//    returned to the start cell.
 			if (cell == config->start()) {
-				marquee->light(LED::YELLOW | LED::RED)
+				marquee->light(LED::YELLOW | LED::RED);
 				// however, we should do more than just change the
 				//    LEDs. perhaps a stop, or a deadloop?
 			}
