@@ -1,88 +1,76 @@
-#ifndef SPIDEV_H
-#define SPIDEV_H
+#ifndef SPIGR_H
+#define SPIGR_H
 
-#include <stdio.h>			// basic i/o
-#include <fcntl.h> 			// file i/o
-#include <stdlib.h>			// exit
-#include <sys/ioctl.h> 		// ioctl
-#include <linux/types.h>
+#include <stdint.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <fcntl.h> 				// open
+#include <unistd.h> 			// close
 #include <linux/spi/spidev.h>
-#include <errno.h>
+#include <stdlib.h>
 
-#include <string>
+#include <iostream>
 
 class SPI {
 	private:
-		struct _settings {
-			__u8  rwmode;
-			__u8  justification;
-			__u8  width;
-			__u32 speed;
-		} settings;
+		__u8  rwmode;
+	//	__u8  justification;
 
 		spi_ioc_transfer payload;
 
-		std::string devname;
 		int spidev;
-		int flags;
 
 	public:
-		SPI(std::string devname) : devname(devname) {
-			flags = O_WRONLY;
+		SPI(std::string devname) {
+			rwmode = SPI_MODE_1;
+			// we want MSB first, but there's no define for that.
+			// for now, assuming the spi is MSB first by default.
+	//		justification = SPI_LSB_FIRST;
 
-		//	this.open();
-			if ((spidev = open(devname.c_str(), flags)) < 0) {
-				std::cerr << "SPI :: SPI() --> unable to open " << devname << std::endl;
-				std::cerr << "SPI :: SPI() --> error: " << strerror(errno) << std::endl;
-				std::cerr << "SPI :: SPI() --> ultimately not fatal, but bailing.\n";
+			// another option for open flags is O_APPEND
+			// maybe also do some reading into O_NONBLOCK
+			// maybe also do some reading into (| 0x03)
+			//    see "man 2 open"
+			if (spidev = open(devname.c_str(), O_WRONLY) < 0) {
+				std::cerr << "SPI :: SPI() --> unable to open "
+				          << devname << std::endl;
+				std::cerr << "SPI :: SPI() --> ultimately NOT fatal. Bailing anyway.\n";
 				exit(51);
-			} else {
-				// these are magic for now. they should be replaced with tested
-				//    and working values later.
-				settings.rwmode = 0x01;
-				settings.justification = 0x01;
-				settings.width = 0x01;
-				payload.bits_per_word = settings.width;
-				settings.speed = 10000;
-				payload.speed_hz = settings.speed;
-
-				if (ioctl(spidev, SPI_IOC_WR_MODE, &settings.rwmode) < 0) {
-					std::cerr << "SPI :: () -- > failure setting MODE" << std::endl;
-					exit(52);
-				}
-
-				if (ioctl(spidev, SPI_IOC_WR_LSB_FIRST, &settings.justification) < 0) {
-					std::cerr << "SPI :: () -- > failure setting BIT JUSTIFICATION" << std::endl;
-					exit(53);
-				}
-
-				if (ioctl(spidev, SPI_IOC_WR_BITS_PER_WORD, &settings.width) < 0) {
-					std::cerr << "SPI :: () -- > failure setting WORD LENGTH" << std::endl;
-					exit(54);
-				}
-
-				if (ioctl(spidev, SPI_IOC_WR_MAX_SPEED_HZ, &settings.speed) < 0) {
-					std::cerr << "SPI :: () -- > failure setting LINE SPEED" << std::endl;
-					exit(55);
-				}
 			}
+
+			// should confre with Darren about the correct mode
+			if (ioctl(spidev, SPI_IOC_WR_MODE, &rwmode) < 0) {
+				std::cerr << "SPI :: SPI() --> unable to set mode of SPI device.\n";
+				std::cerr << "SPI :: SPI() --> treating this as fatal; bailing.\n";
+				exit(52);
+			}
+
+			// for now, only setting the mode explictly. a good
+			//    programmer would do it all at once and not ever
+			//    worry about it again.
 		}
-		
+
 		~SPI() {
 			close(spidev);
 		}
 
-		void write(char buffer[]) {
-			payload.tx_buf = buffer;
-			// cheating since it's a char buffer.
+		void send(char buffer[]) {
+			// EMG: i don't trust this cast. the spidev header states:
+			//
+			//    #tx_buf: Holds pointer to userspace buffer with
+			//             transmit data, or null.
+			//
+			// spilib.c uses (unsigned long).
+			payload.tx_buf = (__u64)buffer;
 			payload.len = sizeof(buffer);
 
-			if ((ioctl(devname, SPI_IOC_MESSAGE(1), payload)) < 0) {
-				fprintf(stderr, "SPI :: write --> Unable to write message.\n");
-				fprintf(stderr, "SPI :: write --> Segment display NOT fatal.\n");
+			if(ioctl(spidev, SPI_IOC_MESSAGE(1), payload) < 0) {
+				std::cerr << "SPI :: xmit --> error sending payload to device.\n";
+				std::cerr << "SPI :: xmit --> not fatal, but not useful. bailing.\n";
+				exit(53);
 			}
 		}
-			
 };
 
-#endif // SPIDEV_H
+#endif // SPIGR_H
