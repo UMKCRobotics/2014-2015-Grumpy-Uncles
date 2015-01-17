@@ -84,7 +84,7 @@ class LED {
         void xmit() {
             // open line to segment device
             // writeout char buffer display_data
-            segment_device->write(display_data);
+            segment_device->send(display_data, 5);
         }
         
         // this is called with an OR mask of the three
