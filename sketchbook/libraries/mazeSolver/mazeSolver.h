@@ -1,5 +1,5 @@
-#include "worldSensor.h"
-#include "/home/umkc/robot/arduino/2014-2015-Grumpy-Uncles/sketchbook/libraries/Cardinal/Cardinal.h"
+//#include "/home/umkc/robot/arduino/2014-2015-Grumpy-Uncles/sketchbook/libraries/Cardinal/Cardinal.h"
+#include "Cardinal.h"
 
 class mazeSolver{
   private:
