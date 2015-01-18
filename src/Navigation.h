@@ -6,6 +6,8 @@
 namespace navigation {
 	short moved(short last, const char cardinal) {
 		switch(cardinal) {
+			// EMG: a good programmer would do
+			//      bounds checking
 			case 'S': return (last + 7); break;
 			case 'E': return (last + 1); break;
 			case 'W': return (last - 1); break;
@@ -15,8 +17,6 @@ namespace navigation {
 		}
 	}
 
-	// this function translates the provided cell number
-	//    into a cardinal based on the last position
 	void add_to_path(char map[], const short cell, const char cardinal) {
 		// map[0]:   where i was
 		// cell:     where i am
@@ -27,7 +27,6 @@ namespace navigation {
 		// store, in our cursor what cell we are in now
 		map[0] = (char)cell;
 	}
-
 }
 
 #endif // NAVIGATION_H

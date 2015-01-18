@@ -11,6 +11,8 @@
 #include "Segment.h"
 #include "USB_daemon.h"
 
+#define nop() void()
+
 int main(void) {
 	// if the UDEV symlink exists, use /dev/ardino
 	// if not, change this to  /dev/ttymxc3
@@ -79,35 +81,47 @@ int main(void) {
 	
 	// indicate to the operator that we are 'READY' and
 	//    waiting for the go-button to be pressed.
-	marquee->light(LED::YELLOW);
+
+	marquee? marquee->light(LED::YELLOW) : nop();
+
 	while (config->wait_on_go()) {
 		// do nothing until the button is pressed.
 	}
 
 	// ask the configurator where we're starting.
-	map[0] = cell = config->start();
+	cell = config->start();
+	map[0] = (char)cell;
 
 	// the button has been pressed. let's start with
 	//    turning the go light on.
-	marquee->light(LED::GREEN);
+	marquee? marquee->light(LED::GREEN) : nop();
 
+	// part 2 of any round
+	// not much to this so it's written first.
 	if (config->part() == 2) {
-		// part 2 of any round
-		// not much to this so it's written first.
 
-		// the map is returned in order, as written
-		//    to the file.
+		// the map is returned in order, as written to
+		//    the file and null-terminated.
 		config->loadPathFromDisk(map);
-		//arduino->runMaze(savedpath);
 		for(int cth = 0; map[cth] != '\0'; cth++) {
 			// the following call blocks until the robot
 			//    is done moving.
 			arduino->moveCardinal(map[cth]);
 		}
+
+	// part 1 of any round
+	// this is where a lot of the work is done.
 	} else {
-		// part 1 of any round
-		daemon->run();		// start the USB daemon thread
-							// this better not block!
+		// start the USB daemon thread
+		// this better not block!
+		if (vision) {
+			daemon? daemon->run() : nop();
+		} else {
+			// light up the yellow to indicate that
+			//    the camera did not start up.
+			marquee? marquee->light(LED::GREEN | LED::YELLOW) : nop();
+		}
+
 		#define EVER ;;
 		for (EVER) {
 			// tell the arduino to move one cell. if there's an egg
@@ -127,29 +141,31 @@ int main(void) {
 			cell = navigation::moved((short)map[0], cardinal);
 
 			// display that to the world.
-			marquee->display(cell);
+			marquee? marquee->display(cell) : nop();
 
 			// keep track of where we've been so that we can eventually
 			//    solve this maze.
 			navigation::add_to_path(map, cell, cardinal);
 
 			// do we need to take a picture?
-			switch (config->round()) {
-				case 2: case 3:
-					// just in case the camera didn't open.
-					if (not (vision == NULL)) {
+			// first, check to see if the camera opened.
+			// also check for the daemon. if neither are
+			//    opened, there's no point in doing this.
+			if (vision && daemon) {
+				switch (config->round()) {
+					case 2: case 3:
 						egg = vision->scan();
-					}
 
-					// since the daemon already handles the file
-					//    just pass whatever was found to write out.
-					daemon->found_egg(cell, egg);
-					break;
+						// since the daemon already handles the file
+						//    just pass whatever was found to write out.
+						daemon->found_egg(cell, egg);
+						break;
+				}
 			}
 
 			// have we reached the end cell?
 			if (cell == config->end()) {
-				marquee->light(LED::RED);
+				marquee? marquee->light(LED::RED) : nop();
 				config->storePathToDisk(map);
 				if (config->keepGoing()) {
 					continue; // from the top of the for loop
@@ -161,9 +177,11 @@ int main(void) {
 			// to be complete, we also check to see if we've
 			//    returned to the start cell.
 			if (cell == config->start()) {
-				marquee->light(LED::YELLOW | LED::RED);
+				marquee? marquee->light(LED::YELLOW | LED::RED) : nop();
 				// however, we should do more than just change the
 				//    LEDs. perhaps a stop, or a deadloop?
+				//    returning for now.
+				return(0);
 			}
 		}
 		// end run
