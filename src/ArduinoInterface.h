@@ -40,10 +40,10 @@ class ArduinoInterface {
 
 			// trying to stay away from 0xFF .. -1 might
 			//    behave oddly in some situations.
-			OP_MOVE = 0xE0;
-			OP_OK   = 0xE1;
-			OP_SYN  = 0xE2;
-			OP_ACK  = 0xE3;
+			OP_MOVE = 'm';
+			OP_OK   = 'o';
+			OP_SYN  = 's';
+			OP_ACK  = 'a';
 		}
 
 		~ArduinoInterface() {
@@ -72,10 +72,9 @@ class ArduinoInterface {
 		// no idea if this will work. but I think the idea
 		//    is solid.
 		// also not sure if this is even needed.
-		bool sync() {
-			do {
-				this->writeByte(OP_SYN);
-			} while((this->readByte()) != OP_ACK);
+		void sync() {
+			this->writeByte(OP_SYN);
+			while((this->readByte()) != OP_ACK);
 		}
 
 		void moveCardinal(char cardinal) {

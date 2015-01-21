@@ -6,19 +6,24 @@
 
 class Configurator {
 	private:
-		short c_round;
-		short c_part;
+		unsigned char c_round;
+		unsigned char c_part;
 		short c_start;
 		short c_end;
 		short MYPOS;
+		short result;
 		std::string c_mapfile;
 
 		bool searchRemainingTime;
 		
 	public:
 		Configurator(ArduinoInterface* interface, std::string mapfile) {
-			c_round = interface->readByte();
-			c_part  = interface->readByte();
+			// the serialib returns values that we should
+			//    use for trouble-shooting. see serialib.cpp
+			//    for more information.
+			interface->sync();
+			result = interface->readByte(&c_round);
+			result = interface->readByte(&c_part);
 			switch(c_round){
 				case 1:
 					c_start = 48;
