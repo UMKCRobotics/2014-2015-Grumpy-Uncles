@@ -1,5 +1,5 @@
 #include <Arduino.h>
-//#include "/home/umkc/robot/arduino/2014-2015-Grumpy-Uncles/sketchbook/libraries/Cardinal/Cardinal.h"
+#include <Cardinal.h>
 
 #define DEFAULT_SPEED 150
 
@@ -68,10 +68,10 @@ Cardinal operator++(Cardinal &c, int ) {
 
        
         motorCommander() {
-          MF_Left = new motor(9, 10);
-          MB_Left = new motor(3, 4);
-          MF_Right = new motor(11, 3);
-          MB_Right = new motor(1, 2);
+          MF_Left  = new motor(10, 11);
+          MB_Left  = new motor( 8,  9);
+          MF_Right = new motor( 6,  7);
+          MB_Right = new motor( 4,  5);
         }
         
         ~ motorCommander(){

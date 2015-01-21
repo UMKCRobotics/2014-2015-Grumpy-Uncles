@@ -3,33 +3,51 @@
 
 class Configurator{
   private:
-    int round_switch_pin1;
-    int round_switch_pin2;
-    int part_switch_pin1;
-    int part_switch_pin2;
-    int throttle_pin;
-    int throttle;
+    byte round_switch_pin1;
+    byte round_switch_pin2;
+    byte round_switch_feed;
+    byte part_switch_pin1;
+    byte part_switch_pin2;
+    byte part_switch_feed;
+    byte throttle_pin;
+    byte throttle;
     int cur_round;
     int cur_part;
     
-	char OP_MOVE;
-	char OP_OK;
-	char OP_SYN;
-	char OP_ACK;
-
-    
   public:
+	static const char OP_MOVE = 'm';
+	static const char OP_OK   = 'o';
+	static const char OP_SYN  = 's';
+	static const char OP_ACK  = 'a';
+    
     Configurator() {
-		throttle_pin = 0;
-		part_switch_pin1 = 0;
-		part_switch_pin2 = 0;
-		round_switch_pin1 = 0;
-		round_switch_pin2 = 0;
+		throttle_pin = A3;
+		round_switch_pin1 = 35;
+		round_switch_feed = 37;
+		round_switch_pin2 = 39;
+		part_switch_pin1 = 34;
+		part_switch_feed = 36;
+		part_switch_pin2 = 38;
 
-		OP_MOVE = 0xE0;
-		OP_OK   = 0xE1;
-		OP_SYN  = 0xE2;
-		OP_ACK  = 0xE3;
+		throttle = 0;
+		cur_round = 0;
+		cur_part = 0;
+	}
+
+	void initialize() {
+		pinMode(round_switch_pin1, INPUT);
+		pinMode(round_switch_pin2, INPUT);
+		digitalWrite(round_switch_pin1, HIGH);
+		digitalWrite(round_switch_pin2, HIGH);
+		pinMode(round_switch_feed, OUTPUT);
+		digitalWrite(round_switch_feed, LOW);
+
+		pinMode(part_switch_pin1, INPUT);
+		pinMode(part_switch_pin2, INPUT);
+		digitalWrite(part_switch_pin1, HIGH);
+		digitalWrite(part_switch_pin2, HIGH);
+		pinMode(part_switch_feed, OUTPUT);
+		digitalWrite(part_switch_feed, LOW);
     }
     
     ~Configurator(){
@@ -38,60 +56,94 @@ class Configurator{
     
     void setRound() {
     // read the round switch and store what round we're in,
-      cur_round = digitalRead(round_switch_pin1);
-      cur_round << 1;
-      cur_round |= digitalRead(round_switch_pin2);
-      
-      switch(cur_round) {
-          // 00, 01, 10, 11
-          case 00:
-            cur_round = 1;
-            break;
-          case 01:
-            cur_round = 2;
-            break;
-          case 10:
-            cur_round = 3;
-            break;
-       }
+    // this will:
+    //    - read one switch pin as 1 or 0,
+    //    - shift that bit right one place
+    //    - bitwise-or the result with the second switch pin.
+    //
+    // possible values (from testing) are:
+    //
+    // b00000001 - switch in REAR position; read as round one
+    // b00000011 - switch in MIDDLE position; read as round two
+    // b00000010 - switch in FORWARD position; read as round three
+      if (digitalRead(round_switch_pin1) == 1) {
+      	if (digitalRead(round_switch_pin2) == 0) {
+      		cur_round = 3;
+      	} else {
+      		cur_round = 2;
+      	}
+      } else {
+      	cur_round = 1;
+      }
     }
     
     void setPart(){
-      cur_part = digitalRead(part_switch_pin1);
-      cur_part << 1;
-      cur_part |= digitalRead(part_switch_pin2);
-      
-      switch(cur_part) {
-          // 00, 01, 10, 11
-          case 11: case 00:
-            cur_part = 1;
-            break;
-          case 01: case 10:
-            cur_part = 2;
-            break;
-       }
+    // read the round switch and store what part we're in,
+    // this will:
+    //    - read one switch pin as 1 or 0,
+    //    - shift that bit right one place
+    //    - bitwise-or the result with the second switch pin.
+    //
+    // possible values (from testing) are:
+    //
+    // b00000001 - switch in REAR position; read as part one
+    // b00000010 - switch in FORWARD position; read as part two
+    	if (digitalRead(part_switch_pin1) == 0) {
+    		cur_part = 1;
+    	} else {
+    		cur_part = 2;
+    	}
     }
     
     void setThrottle(){
-      throttle = analogRead(throttle_pin);
-      //convert to a useable value
+      //throttle = analogRead(throttle_pin);
+      // convert to a useable value
+
+      // since we're passing it up inside a char,
+      //    reasonable values are between 0 and 255
+      //
+      // need to determine what the maximum value
+      //    of the potentiometer is.
+      throttle = map(analogRead(throttle_pin), 0, 1024, 0, 255);
     }
     
-    void sendData(HardwareSerial* output_stream){
-       //Wait on sync byte that says we are ready to transmit.
+    void sendConfig(HardwareSerial* output_stream){
+//       //Wait on sync byte that says we are ready to transmit.
        char synack = 0x00;
        do {
            synack = output_stream->read();
        } while(synack != OP_SYN);
        output_stream->write(OP_ACK);
 
+       // decdided not to wait on a sync. this data should
+       //    sit in the buffer until called upon.
+       //
+       // a whole other way to do this is to have the upper
+       //    layer use the arduinoInterface to ask the arduino
+       //    what it wants. 
+       //
+       //    udoo          arduino
+       //    
+       //    OP_ROUND -------->
+       //        <--------  round #
+       //    OP_PART  -------->
+       //        <--------  part #
+       //
        //Then send the data.
        //use output_stream->write(BYTE)
-       output_stream->write(cur_round);
-       output_stream->write(cur_part);
+       output_stream->write((byte)cur_round);
+       output_stream->write((byte)cur_part);
     }
     
-    int getThrottle(){
+    byte getThrottle(){
       return throttle;
+    }
+
+    int getPart() {
+    	return cur_part;
+    }
+
+    int getRound() {
+    	return cur_round;
     }
 };
