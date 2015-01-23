@@ -4,6 +4,13 @@
 #include <cstdlib>		// exit()
 
 namespace navigation {
+	enum CARDINAL {
+		NORTH = 0,
+		EAST  = 1,
+		SOUTH = 2,
+		WEST  = 3
+	};
+
 	short moved(short last, const char cardinal) {
 		switch(cardinal) {
 			// EMG: a good programmer would do
@@ -14,6 +21,17 @@ namespace navigation {
 			case 'N': return (last - 7); break;
 			// we should assume we didn't move.
 			default:  return (last);     break;
+		}
+	}
+
+	char moveto(const char direction) {
+		switch (direction) {
+			case 'S': return (SOUTH); break;
+			case 'E': return  (EAST); break;
+			case 'W': return  (WEST); break;
+			case 'N': return (NORTH); break;
+			// what happens if we get here?
+			default:                  break;
 		}
 	}
 

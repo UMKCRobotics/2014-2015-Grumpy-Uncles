@@ -75,6 +75,9 @@ class ArduinoInterface {
 		void sync() {
 			this->writeByte(OP_SYN);
 			while((this->readByte()) != OP_ACK);
+			// a better way to do this is time out,
+			//    flush the line if possible and then
+			//    restart from the top of sync()
 		}
 
 		void moveCardinal(char cardinal) {

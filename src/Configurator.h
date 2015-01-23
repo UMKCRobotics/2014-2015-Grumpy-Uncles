@@ -22,8 +22,8 @@ class Configurator {
 			//    use for trouble-shooting. see serialib.cpp
 			//    for more information.
 			interface->sync();
-			result = interface->readByte(&c_round);
-			result = interface->readByte(&c_part);
+			c_round = interface->readByte();
+			c_part  = interface->readByte();
 			switch(c_round){
 				case 1:
 					c_start = 48;
@@ -90,11 +90,27 @@ class Configurator {
 			fin.close();
 		}
 
-		bool wait_on_go() {		// STUB
+		bool wait_on_go(const char* pin_file) {
 			// read a GPIO pin for the 'GO' button.
 			// return a value based on its state
 			// I hope we can plug the btn into a GPIO.
+			char value = 0x00;
+			int gopin = open(pin_file, O_RDONLY);
 
+			// block, until the button is pressed.
+			do {
+				read(gopin, &value, 1);
+				// we're reading a file, not just looking
+				//    at values like in an arduino, so we
+				//    need to reset the file pointer back
+				//    to the front of the file.
+				lseek(gopin, 0, SEEK_SET);
+				usleep(250);
+			} while (gopin == '1');
+			// '1' is what the board registers an
+			//    unpressed button as.
+
+			close(gopin);
 			return true;
 		}
 };
