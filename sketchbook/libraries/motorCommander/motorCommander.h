@@ -2,8 +2,6 @@
 //#include <Cardinal.h>
 //#include <line_sensor.h>
 
-#define DEFAULT_SPEED 150
-
 /*
 // Special behavior for ++Cardinal
 Cardinal& operator++(Cardinal &c ) {
@@ -73,9 +71,8 @@ class motorCommander{
 	private:
 		motor MF_Left;
 		motor MB_Left;
-//		motor* MB_Left;
-//		motor* MF_Right;
-//		motor* MB_Right;
+//		motor MF_Right;
+//		motor MB_Right;
 
 		int turn_delay90 = 1000;
 		dir::Cardinal current_direction = dir::NORTH;
@@ -103,23 +100,15 @@ class motorCommander{
 //			MB_Right = new motor( 4,  5);
 		}
 
-		~ motorCommander() {
-//			delete MF_Left;
-//			delete MB_Left;
-//			delete MF_Right;
-//			delete MB_Right;
-		}
 
 		void mcSetup(byte i_throttle) {
 			throttle = i_throttle;
 			bar = NULL;
 
 			MF_Left.M_Setup(11, 10);
-			MB_Left.M_Setup( 8,  9);
-//			MF_Left->M_Setup();
-//			MB_Left->M_Setup();
-//			MF_Right->M_Setup();
-//			MB_Right->M_Setup();
+			MB_Left.M_Setup(8,  9);
+//			MF_Right.M_Setup(4, 5);
+//			MB_Right.M_Setup(6, 7);
 			STOP();
 			Serial.println("MC --> setup done");
 		}
@@ -132,7 +121,6 @@ class motorCommander{
 			return current_direction;
 		}
 
-//		void MOVE_FORWARD(int movement_speed = DEFAULT_SPEED) {
 		void MOVE_FORWARD() {
 			byte sensors = BLANK;
 			int offset;
@@ -141,8 +129,8 @@ class motorCommander{
 			do {
 				MF_Left.go_forward(speed_l);
 				MB_Left.go_forward(speed_l);
-//				MF_Right->go_forward(speed_r);
-//				MB_Right->go_forward(speed_r);
+//				MF_Right.go_forward(speed_r);
+//				MB_Right.go_forward(speed_r);
 
 				if (offset < 0) {
 					// drifting to the left.
@@ -160,25 +148,24 @@ class motorCommander{
 
 			MF_Left.go_forward(throttle);
 			MB_Left.go_forward(throttle);
-//			MF_Right->go_forward(throttle);
-//			MB_Right->go_forward(throttle);
+//			MF_Right.go_forward(throttle);
+//			MB_Right.go_forward(throttle);
 			// delay for a quarter of a second
 			delay(250);
 			// and then stop
 			STOP();
 		}
 
-//		void MOVE_BACKWARD(int movement_speed = DEFAULT_SPEED){
 		void MOVE_BACKWARD() {
 			byte sensors = BLANK;
 			int offset;
 			offset = (bar? bar->read_line() : 0);
 			offset = offset / 10;
 			do {
-//				MF_Left->go_backward(speed_l);
-//				MB_Left->go_backward(speed_l);
-//				MF_Right->go_backward(speed_r);
-//				MB_Right->go_backward(speed_r);
+//				MF_Left.go_backward(speed_l);
+//				MB_Left.go_backward(speed_l);
+//				MF_Right.go_backward(speed_r);
+//				MB_Right.go_backward(speed_r);
 
 				if (offset < 0) {
 					// drifting to the left.
@@ -194,30 +181,28 @@ class motorCommander{
 				}
 			} while (bar? bar->poll_sensors() != FULL_LINE : 0);
 
-//			MF_Left->go_backward(throttle);
-//			MB_Left->go_backward(throttle);
-//			MF_Right->go_backward(throttle);
-//			MB_Right->go_backward(throttle);
+//			MF_Left.go_backward(throttle);
+//			MB_Left.go_backward(throttle);
+//			MF_Right.go_backward(throttle);
+//			MB_Right.go_backward(throttle);
 			// delay for a quarter of a second
 			delay(250);
 			// and then stop
 			STOP();
 		}
 
-//		void TURN_RIGHT(int movement_speed = DEFAULT_SPEED){
 		void TURN_RIGHT() {
 			STOP();
-//			MF_Right->go_backward(throttle);
-//			MF_Left->go_forward(throttle);
+//			MF_Right.go_backward(throttle);
+//			MF_Left.go_forward(throttle);
 			delay(turn_delay90); 
 			STOP();
 		}
 
-//		void TURN_LEFT(int movement_speed = DEFAULT_SPEED){
 		void TURN_LEFT() {
 			STOP();
-//			MF_Left->go_backward(throttle);
-//			MF_Right->go_forward(throttle);
+//			MF_Right.go_forward(throttle);
+//			MF_Left.go_backward(throttle);
 			delay(turn_delay90); 
 			STOP();
 		}
@@ -225,8 +210,8 @@ class motorCommander{
 		void STOP(){
 			MF_Left.stop_mvmt();
 			MB_Left.stop_mvmt();
-//			MF_Right->stop_mvmt();
-//			MB_Right->stop_mvmt();
+//			MF_Right.stop_mvmt();
+//			MB_Right.stop_mvmt();
 		}
 
 		void moveCardinal(dir::Cardinal direction_input) {
