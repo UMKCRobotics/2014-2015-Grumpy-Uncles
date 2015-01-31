@@ -44,20 +44,18 @@ class motor{
 		}
 
 		void go_forward(int mvmt_speed) {
-			analogWrite(pin_two, LOW);
-			//slow code here
+			digitalWrite(pin_two, LOW);
 			analogWrite(pin_one, mvmt_speed);
 		}
 
 		void go_backward(int mvmt_speed) {
-			analogWrite(pin_one, LOW);
-			//slow code here
+			digitalWrite(pin_one, LOW);
 			analogWrite(pin_two, mvmt_speed);
 		}
 
 		void stop_mvmt(){
-			analogWrite(pin_one, LOW);
-			analogWrite(pin_two, LOW);
+			digitalWrite(pin_one, LOW);
+			digitalWrite(pin_two, LOW);
 		}
 
 		void all_stop() {
@@ -77,11 +75,15 @@ class motorCommander{
 		int turn_delay90 = 1000;
 		dir::Cardinal current_direction = dir::NORTH;
 
-		LineSensors* bar;
+		LineSensors bar;
 		byte throttle;
+		byte pin_throttle;
 		byte speed_l;
 		byte speed_r;
 
+		// these are only some of the valid states that are
+		//    returned by poll_sensor. the bits indicate
+		//    roughly where the line is under the sensor bar.
 		static const byte BLANK = 0x00;
 		static const byte ON_PATH = 0x18;
 		static const byte GUIDE_LEFT = 0x38;
@@ -92,25 +94,20 @@ class motorCommander{
 
 	public:
 		motorCommander() {
-			// IAW the DRV8833 spec sheet, the order
-			//    of constructors is (*IN1, *IN2),
-//			MF_Left  = new motor(11, 10);
-//			MB_Left  = new motor( 8,  9);
-//			MF_Right = new motor( 7,  6);
-//			MB_Right = new motor( 4,  5);
 		}
 
+		void mcSetup(byte pin_t) {
+			pin_throttle = pin_t;
+			bar.init(500);
 
-		void mcSetup(byte i_throttle) {
-			throttle = i_throttle;
-			bar = NULL;
-
-			MF_Left.M_Setup(11, 10);
+			// IAW the DRV8833 spec sheet, the order
+			//    of constructors is (*IN1, *IN2),
+			MF_Left.M_Setup(10, 11);
 			MB_Left.M_Setup(8,  9);
 //			MF_Right.M_Setup(4, 5);
 //			MB_Right.M_Setup(6, 7);
 			STOP();
-			Serial.println("MC --> setup done");
+//			Serial.println("MC --> setup done");
 		}
 
 		void set_direction(dir::Cardinal n_dir) {
@@ -122,10 +119,18 @@ class motorCommander{
 		}
 
 		void MOVE_FORWARD() {
+			STOP();
+			throtte = map(analogRead(pin_throttle), 0, 1023, 0, 255);
+			speed_l = speed_r = throttle;
+			// RYAN: need to have a better function for speed
+			//       control. what if you're going speed '5', how
+			//       do you subtract 10.
+			//       look at division or exponential.
 			byte sensors = BLANK;
 			int offset;
-			offset = (bar? bar->read_line() : 0);
-			offset = offset / 10;
+		//	offset = bar.read_line();
+		//	offset = offset / 10;
+			offset = 0;
 			do {
 				MF_Left.go_forward(speed_l);
 				MB_Left.go_forward(speed_l);
@@ -144,26 +149,35 @@ class motorCommander{
 					// right on target
 					// do not adjust speed.
 				}
-			} while (bar? bar->poll_sensors() != FULL_LINE : false);
+			} while (bar.poll_sensors() != FULL_LINE);
 
 			MF_Left.go_forward(throttle);
 			MB_Left.go_forward(throttle);
 //			MF_Right.go_forward(throttle);
 //			MB_Right.go_forward(throttle);
-			// delay for a quarter of a second
+			// delay for moment to get past the line and
+			//    more into the center of the cell.
 			delay(250);
 			// and then stop
 			STOP();
 		}
 
 		void MOVE_BACKWARD() {
+			STOP();
+			throtte = map(analogRead(pin_throttle), 0, 1023, 0, 255);
+			speed_l = speed_r = throttle;
+			// RYAN: need to have a better function for speed
+			//       control. what if you're going speed '5', how
+			//       do you subtract 10.
+			//       look at division or exponential.
 			byte sensors = BLANK;
 			int offset;
-			offset = (bar? bar->read_line() : 0);
-			offset = offset / 10;
+		//	offset = bar.read_line();
+		//	offset = offset / 10;
+			offset = 0;
 			do {
-//				MF_Left.go_backward(speed_l);
-//				MB_Left.go_backward(speed_l);
+				MF_Left.go_backward(speed_l);
+				MB_Left.go_backward(speed_l);
 //				MF_Right.go_backward(speed_r);
 //				MB_Right.go_backward(speed_r);
 
@@ -179,13 +193,14 @@ class motorCommander{
 					// right on target
 					// do not adjust speed.
 				}
-			} while (bar? bar->poll_sensors() != FULL_LINE : 0);
+			} while (bar.poll_sensors() != FULL_LINE);
 
-//			MF_Left.go_backward(throttle);
-//			MB_Left.go_backward(throttle);
+			MF_Left.go_backward(throttle);
+			MB_Left.go_backward(throttle);
 //			MF_Right.go_backward(throttle);
 //			MB_Right.go_backward(throttle);
-			// delay for a quarter of a second
+			// delay for moment to get past the line and
+			//    more into the center of the cell.
 			delay(250);
 			// and then stop
 			STOP();
@@ -194,7 +209,7 @@ class motorCommander{
 		void TURN_RIGHT() {
 			STOP();
 //			MF_Right.go_backward(throttle);
-//			MF_Left.go_forward(throttle);
+			MF_Left.go_forward(throttle);
 			delay(turn_delay90); 
 			STOP();
 		}
@@ -202,7 +217,7 @@ class motorCommander{
 		void TURN_LEFT() {
 			STOP();
 //			MF_Right.go_forward(throttle);
-//			MF_Left.go_backward(throttle);
+			MF_Left.go_backward(throttle);
 			delay(turn_delay90); 
 			STOP();
 		}

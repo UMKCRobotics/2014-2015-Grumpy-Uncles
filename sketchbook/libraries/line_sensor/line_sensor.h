@@ -62,8 +62,7 @@ class LineSensors {
 		int read_line() {
 			int line = bar.readLine(sensor_values);
 			// 3500 is the mean return of the 8 sensor bar
-			line = 3500 - line;
-			abs(line);
+			line = line - 3500;
 			return (line);
 		}
 
