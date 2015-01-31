@@ -102,8 +102,8 @@ class motorCommander{
 
 			// IAW the DRV8833 spec sheet, the order
 			//    of constructors is (*IN1, *IN2),
-			MF_Left.M_Setup(10, 11);
-			MB_Left.M_Setup(8,  9);
+			MF_Left.M_Setup(8, 9);
+			MB_Left.M_Setup(6,  7);
 //			MF_Right.M_Setup(4, 5);
 //			MB_Right.M_Setup(6, 7);
 			STOP();
@@ -229,7 +229,7 @@ class motorCommander{
 //			MB_Right.stop_mvmt();
 		}
 
-		void moveCardinal(dir::Cardinal direction_input) {
+		short moveCardinal(dir::Cardinal direction_input) {
 			int desired_direction = current_direction - direction_input;
 			switch (desired_direction){
 				case 0:
@@ -237,18 +237,33 @@ class motorCommander{
 					break;
 				case 1: case -3:
 					TURN_LEFT();
-					MOVE_FORWARD();
+					current_direction--;
 					break;
 				case 2: case -2:
 					TURN_RIGHT();
-					TURN_RIGHT();
-					MOVE_FORWARD();
+					current_direction++;
 					break;
 				case 3: case -1:
 					TURN_RIGHT();
-					MOVE_FORWARD();
-				break;
+					current_direction++;
+					break;
 			}
-			current_direction = direction_input;
+
+			switch(current_direction){
+				case -1:
+					current_direction = 3;
+					break;
+				case -2:
+					current_direction = 2;
+					break;
+				case -3:
+					current_direction = 1;
+					break;
+				case -4: case 4:	
+					current_direction = 0;
+					break;
+			}
+
+			return(desired_direction);
 		}
 };

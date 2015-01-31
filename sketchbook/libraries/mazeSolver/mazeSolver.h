@@ -1,4 +1,3 @@
-//#include "/home/umkc/robot/arduino/2014-2015-Grumpy-Uncles/sketchbook/libraries/Cardinal/Cardinal.h"
 #include "Cardinal.h"
 
 class mazeSolver{
@@ -40,7 +39,7 @@ class mazeSolver{
           else if (openings[L])
             return  dir::NORTH;
           else
-            return dir::EAST;
+            return dir::WEST;
             break;
           case dir::WEST:
            if (openings[R])
@@ -51,7 +50,8 @@ class mazeSolver{
             return dir::SOUTH;
           else
             return dir::EAST;
-            break;
+            break;       
+       
       }
 }
     };
