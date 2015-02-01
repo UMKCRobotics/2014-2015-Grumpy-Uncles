@@ -47,6 +47,10 @@ class motorCommander {
 		byte throttle;
 		byte speed_l;
 
+		void set_throttle() {
+			throttle = map(analogRead(throttle_pin), 0, 1023, 255, 0);
+		}
+
 	public:
 		motorCommander() { };
 
@@ -58,7 +62,7 @@ class motorCommander {
 
 		void MOVE_FORWARD() {
 			STOP();
-			throttle = map(analogRead(throttle_pin), 0, 1023, 0, 255);
+			set_throttle();
 			speed_l = throttle;
 
 			left_front.go_forward(speed_l);
@@ -70,7 +74,7 @@ class motorCommander {
 
 		void MOVE_BACKWARD() {
 			STOP();
-			throttle = map(analogRead(throttle_pin), 0, 1023, 0, 255);
+			set_throttle();
 			speed_l = throttle;
 
 			left_front.go_reverse(speed_l);
