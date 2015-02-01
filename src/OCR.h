@@ -1,3 +1,6 @@
+#ifndef OCR_H
+#define OCR_H
+
 #include <opencv2/highgui/highgui.hpp>
 #include <tesseract/baseapi.h>
 #include <string>
@@ -14,8 +17,8 @@ class OCR {
 		OCR(int dev) {
 			capture = new cv::VideoCapture(dev);
 			if (!capture->isOpened()) {
-				std::cerr << "Failure to open default camera device '0'\n";
-				std::cerr << "\n\nBailing (for now)\n";
+				std::cerr << "OCR :: Failure to open default camera device '0'\n";
+				std::cerr << "OCR :: non-fatal, Bailing (for now)\n";
 				exit(31);
 			}
 
@@ -30,7 +33,8 @@ class OCR {
 			delete(tessa);
 		}
 
-		char run() {
+		// thread?
+		char scan() {
 			// clear the buffer of any stray frames.
 			// EMG: I learned this 2013 with Wesley.
 			for (short dump = 0; dump < 10; dump++) {
@@ -38,7 +42,7 @@ class OCR {
 			}
 			// capture a fresh (and so clean) frame from the camera
 			*capture >> frame;
-			// do your openCV magic here to clean up the image.
+			// insert  openCV magic to clean up the image.
 
 			// do the tesseract thing.
 			tessa->SetImage( (uchar*)frame.data,
@@ -51,14 +55,56 @@ class OCR {
 
 			// retreive all the output from tessa
 			std::string output(tessa->GetUTF8Text());
-			std::stringstream ss;
+			// use tesseracts confidence values to get
+			//    the best match
+			// https://code.google.com/p/tesseract-ocr/wiki/APIExample
+			//
+			//	  Pix *image = pixRead("/usr/src/tesseract-3.02/phototest.tif");
+			//	  tesseract::TessBaseAPI *api = new tesseract::TessBaseAPI();
+			//	  api->Init(NULL, "eng");
+			//	  api->SetImage(image);
+				// where are a list of the parameters that can be set?
+			//	  api->SetVariable("save_blob_choices", "T");
+			//	  api->SetRectangle(37, 228, 548, 31);
+			//	  api->Recognize(NULL);
+			//	
 
-			// this stringstream will allow us to filter the result
+				// ri returns a 'word'
+			//	  tesseract::ResultIterator* ri = api->GetIterator();
+			//	  tesseract::PageIteratorLevel level = tesseract::RIL_SYMBOL;
+			//	  if(ri != 0) {
+			//	      do {
+			//	          const char* symbol = ri->GetUTF8Text(level);
+			//	          float conf = ri->Confidence(level);
+			//	          if(symbol != 0) {
+			//	              printf("symbol %s, conf: %f", symbol, conf);
+			//	              bool indent = false;
+			//	              tesseract::ChoiceIterator ci(*ri);
+
+				// and i think this looks at the individual letters/symbols
+			//	              do {
+			//	                  if (indent) printf("\t\t ");
+			//	                  printf("\t- ");
+			//	                  const char* choice = ci.GetUTF8Text();
+			//	                  printf("%s conf: %f\n", choice, ci.Confidence());
+			//	                  indent = true;
+			//	              } while(ci.Next());
+			//	          } // end if(symbol)
+			//	          printf("---------------------------------------------\n");
+			//	          delete[] symbol;
+			//	      } while((ri->Next(level)));
+			//	  } // end if(ri)
+
+			// this stringstream will allow us to filter
+			//    the result -- so hacky.
+			std::stringstream ss;
 			ss << output;
 			output.clear();
 			// grab the first non-whitespace character found
 			ss >> output;
-			//  blech -- so hacky.
+
 			return (*output.c_str());
 		}
 };
+
+#endif // OCR_H

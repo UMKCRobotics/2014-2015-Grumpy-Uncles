@@ -1,7 +1,11 @@
+#ifndef USBWAIT_H
+#define USBWAIT_H
+
 #include "wait_for_usb.h"
 
 #include <cstdio>		// remove
 #include <unistd.h>		// fork, pid
+#include <thread>		// C++11 threads
 
 class USB {
 	private:
@@ -44,10 +48,12 @@ class USB {
 		}
 
 		void run() {
-			// start the thread using wait_for_usb();
 			if (not running) {
+				// start the thread using wait_for_usb();
 				std::thread chicken(wait_for_usb, egg_file.c_str());
 				running = true;
 			}
 		}
 };
+
+#endif // USBWAIT_H

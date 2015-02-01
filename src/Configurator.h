@@ -1,26 +1,29 @@
+#ifndef CONFIGURATOR_H
+#define CONFIGURATOR_H
+
 #include <fstream>
 #include <string>
 
 class Configurator {
 	private:
-		char c_round;
-		char c_part;
-		char c_start;
-		char c_end;
+		unsigned char c_round;
+		unsigned char c_part;
+		short c_start;
+		short c_end;
 		short MYPOS;
-		std::string c_filename;
+		short result;
+		std::string c_mapfile;
 
 		bool searchRemainingTime;
 		
 	public:
-		Configurator(ArduinoInterface* interface, std::string filename) {
-			// create serial connection to <serialport>
-			// block on read from arduino for:
-			//    byte for start
-			//    byte for end
-			//    int for speed
-			c_round = interface->serialReadBytes(1);
-			c_part  = interface->serialReadBytes(1);
+		Configurator(ArduinoInterface* interface, std::string mapfile) {
+			// the serialib returns values that we should
+			//    use for trouble-shooting. see serialib.cpp
+			//    for more information.
+			interface->sync();
+			c_round = interface->readByte();
+			c_part  = interface->readByte();
 			switch(c_round){
 				case 1:
 					c_start = 48;
@@ -37,12 +40,11 @@ class Configurator {
 			
 			}
 			MYPOS = 0;
-			c_filename = filename;
+			c_mapfile = mapfile;
 
 			// do we keep searching when we reach the end?
-			// this will need to be better handled.
-			// perhaps some sort of timer that triggers when the
-			//    go button is pushed?
+			// configured to false during testing.
+			// during actual runs, set to true.
 			searchRemainingTime = false;
 		}
 
@@ -50,28 +52,28 @@ class Configurator {
 			return searchRemainingTime;
 		}
 
-		char round() {
+		short round() {
 			return c_round;
 		}
 
-		char part() {
+		short part() {
 			return c_part;
 		}
 
-		char start() {
+		short start() {
 			return c_start;
 		}
 
-		char end() {
+		short end() {
 			return c_end;
 		}
 
 		void storePathToDisk(char map[]) {
 			// open output stream to file
-			std::ofstream fout(c_filename.c_str());
+			std::ofstream fout(c_mapfile.c_str());
 			map[MYPOS] = c_start;
 			while (map[MYPOS] != c_end) {
-				fout << map[map[MYPOS]] << ",";
+				fout << map[map[MYPOS]] << " ";
 				map[MYPOS] = map[map[MYPOS]];
 			}
 			// close output stream
@@ -79,24 +81,38 @@ class Configurator {
 		}
 		
 		void loadPathFromDisk(char map[]) {
-		//	std::ifstream fin(c_filename.c_str());
-		//	std::string buffer;
-		//	
-		//	map[0] = c_start;
-		//	while(!fin.eof()) {
-		//		// store next move into current node
-		//		map[map[0]] << (char)fin;
-		//		// move cursor to next node
-		//		map[0] = map[map[0]];
-		//	}
+			std::ifstream fin(c_mapfile.c_str());
+			std::string buffer;
+			
+			short step = 0;
+			while (fin >> map[step++]);
 		// What to do if file isn't found?
+			fin.close();
 		}
 
-		bool wait_on_go() {
+		bool wait_on_go(const char* pin_file) {
 			// read a GPIO pin for the 'GO' button.
 			// return a value based on its state
 			// I hope we can plug the btn into a GPIO.
+			char value = 0x00;
+			int gopin = open(pin_file, O_RDONLY);
 
+			// block, until the button is pressed.
+			do {
+				read(gopin, &value, 1);
+				// we're reading a file, not just looking
+				//    at values like in an arduino, so we
+				//    need to reset the file pointer back
+				//    to the front of the file.
+				lseek(gopin, 0, SEEK_SET);
+				usleep(250);
+			} while (gopin == '1');
+			// '1' is what the board registers an
+			//    unpressed button as.
+
+			close(gopin);
 			return true;
 		}
 };
+
+#endif // CONFIGURATOR_H

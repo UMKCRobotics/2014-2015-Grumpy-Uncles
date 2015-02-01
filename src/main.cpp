@@ -4,138 +4,198 @@
 #include <cstdlib>		// exit
 
 #include "Navigation.h"
+#include "Filenames.h"
 #include "ArduinoInterface.h"
 #include "Configurator.h"
 #include "OCR.h"
-#include "Billboard.h"
+#include "Segment.h"
 #include "USB_daemon.h"
+
+#define nop() void()
 
 int main(void) {
 	// if the UDEV symlink exists, use /dev/ardino
-	// if not, use /dev/ttymxc3
+	// if not, change this to  /dev/ttymxc3
 	const std::string serialport = "/dev/arduino";
+
+	// making a udev rule would be pretty, but this
+	//    might end up being /dev/spidevX.Y
 	const std::string billboard  = "/dev/billboard";
-	const std::string egg_carton = "config/eggs.txt";
-	const std::string path_file  = "confing/path.ssv";
+
+	// point to the value section of the correct gpio
+	//    pin that the GO BUTTON is connected to.
+	const std::string gopin = "/sys/class/gpio/gpio35/value";
+
+	// generate filenames based on the current date and time.
+	//    this allows tracking of files based on run times.
+	//    the only way that files could be overwritten is if
+	//    the HWCLOCK is reset to 0 ctime after a power-up.
+	const std::string egg_carton = filename::generate("config/", "egg");
+	const std::string map_file   = filename::generate("config/", "map");
+
+	// OpenCV is pretty easy about its camera source.
+	//    you can (if you so desire) provide a movie
+	//    file (in any of AVI, MOV, MPG, etc) to test
+	//    the same thing over and over. for live, we'll
+	//    use the number zero which is the first camera
+	//    device that OpenCV finds.
+	// this uses some internal video4linux routines to
+	//    discover what this is. the udoo will only have
+	//    one camera attached, so this is safe.
 	const int cameradevice = 0;
 
-	// map is an array of CARDINALS, in human-redable form: N, W, S, E
-	char map[50];
+	// map is an array of CARDINALS, in human-redable form:
+	//
+	//    N, W, S, E
+	//
+	// the empty braces initialize the array to all zeroes.
+	// map[0] will contain a logical number referring to the cell
+	//    that the robot currently occupies. when storing, cast
+	//    the number to a (char), whern reading, cast as (short)
+	char map[50] = { };
 
-	ArduinoInterface* interface = new ArduinoInterface(serialport);
-	if (interface ==  NULL) {
+	ArduinoInterface* arduino = new ArduinoInterface(serialport);
+	if (arduino ==  NULL) {
 		std::cerr << "MAIN :: failed on (arduino <> master) interface\n";
 		std::cerr << "MAIN :: FATAL -- bailing.\n";
-		exit (31);
+		exit (11);
 	}
-	Configurator* config = new Configurator(interface, path_file);
+	Configurator* config = new Configurator(arduino, map_file);
 	if (config ==  NULL) {
 		std::cerr << "MAIN :: failed on CONFIGURATOR\n";
 		std::cerr << "MAIN :: FATAL -- bailing.\n";
-		exit (32);
+		exit (12);
 	}
 	OCR* vision = new OCR(cameradevice);
 	if (vision ==  NULL) {
 		std::cerr << "MAIN :: failed on Camera/OCR interface\n";
-		std::cerr << "MAIN :: FATAL -- bailing.\n";
-		exit (33);
+		std::cerr << "MAIN :: NON-fatal. continuing.\n";
+	//	std::cerr << "MAIN :: FATAL -- bailing.\n";
+	//	exit (13);
 	}
 
-	LEDs* marquee = new LEDs(billboard);
+	LED* marquee = new LED(billboard);
 	if (marquee == NULL) {
-		std::cerr << "MAIN :: failed on LED/Segment displau\n";
-		std::cerr << "MAIN :: NON-fatal. continuing\n";
-	//	exit (34);
+		std::cerr << "MAIN :: failed on LED/Segment display\n";
+		std::cerr << "MAIN :: This is fatal. bailing.\n";
+		exit (14);
 	}
-
-// this object, on instantiation, needs to check for the
-//    presence of this file, and delete it if it exists.
 	USB* daemon = new USB(egg_carton);
 	if (daemon == NULL) {
 		std::cerr << "MAIN :: failed on USB daemon\n";
 		std::cerr << "MAIN :: NON-fatal. continuing.\n";
-	//	exit (35);
+	//	exit (15);
 	}
 
 	short cell =  0;
-	char egg = '|';			// '|' indicates a non-value
+	char egg = '?';			// '?' indicates a non-value
 							//     it is also a character
 							//     not used in the maze
+	char cardinal = '?';
 	
-	// indicate to the operator that we are 'GO' and waiting for the
-	//    button to be pressed.
-	marquee->light(LEDs::YELLOW);
-	while (config->wait_on_go()) {
-		// do nothing until the button is pressed.
-	}
+	// ask the configurator where we're starting.
+	cell = config->start();
+	map[0] = (char)cell;
 
+	// indicate to the operator that we are 'READY' and
+	//    waiting for the go-button to be pressed.
+	marquee->light(LED::YELLOW);
+
+	// do nothing until the button is pressed.
+	//    this blocks while waiting.
+	config->wait_on_go(gopin.c_str());
+
+	// the button has been pressed. let's start with
+	//    turning the go light on.
+	marquee->light(LED::GREEN);
+
+	// part 2 of any round
+	// not much to this so it's written first.
 	if (config->part() == 2) {
-		// part 2 of any round
-		// not much to this so it's written first.
 
-		marquee->light(LEDs::GREEN);
-		// self running
+		// the map is returned in order, as written to
+		//    the file and null-terminated.
 		config->loadPathFromDisk(map);
-		//interface->runMaze(savedpath);
 		for(int cth = 0; map[cth] != '\0'; cth++) {
-			interface->moveCardinal(map[cth]);
+			// the following call blocks until the robot
+			//    is done moving.
+			cardinal = navigation::moveto(map[cth]);
+			arduino->moveCardinal(cardinal);
 		}
+
+	// part 1 of any round
+	// this is where a lot of the work is done.
 	} else {
-		marquee->light(LEDs::GREEN);
-		// part 1 of any round
-		daemon->run();		// start the USB daemon thread
-							// this better not block!
+		// start the USB daemon thread
+		// this better not block!
+		if (vision) {
+			daemon? daemon->run() : nop();
+		} else {
+			// light up the yellow to indicate that
+			//    the camera did not start up.
+			marquee->light(LED::GREEN | LED::YELLOW);
+		}
+
 		#define EVER ;;
 		for (EVER) {
+			// tell the arduino to move one cell. if there's an egg
+			//    in the start cell, we won't catch it unless we
+			//    return there.
+			arduino->proceed();
 		
 			// from the above, that means we just block on this line:
 			// this line waits on the lower half to tell us that we've
-			//    moved to another cell. the cell number is passed up
-			//    and we use that information for storage and any eggs
-			//    we find in this cell.
-			cell = interface->serialReadBytes(1);
+			//    moved. the lower half returns the cardinal that was
+			//    used to move - we then need to translate and store
+			//    the cell number that we've moved to.
+			cardinal = arduino->readByte();
+
+			// take where we were (map[0]) and find out where we are
+			//    based on the cardinal returned.
+			cell = navigation::moved((short)map[0], cardinal);
+
+			// display that to the world.
 			marquee->display(cell);
 
-			// and let the arduino drive the robot. Master will just be
-			//    for housekeeping and starting the camera/OCR.
-			//navigation::addCurrentNodeplusCardinaltoPath(map, cell);
-			navigation::add_to_path(map, cell);
-			
-			// do we need to take a picture?
-			switch (config->round()) {
-				case 2: case 3:
-					// this returns.
-					// store this value, and the current node
-					//    into a pair<cell, char>, and then
-					//    append to a vector.
-					//    open file, write file, close file
-					//
-					// don't need a fancy data structure.
-					// just write to the file after every return.
-				//	egg = vision->run(map[MYPOS]);
-					egg = vision->run();
+			// keep track of where we've been so that we can eventually
+			//    solve this maze.
+			navigation::add_to_path(map, cell, cardinal);
 
-					// since the daemon already handles the file
-					//    just pass this off to write out.
-					daemon->found_egg(cell, egg);
-					
-					// this falls through on PURPOSE (EMG).
-				default:
-					// regardless of what round we're in, the next
-					//    step is to move. We need to let the lower
-					//    half know that we're done processing.
-					interface->proceed();
-					break;
+			// do we need to take a picture?
+			// first, check to see if the camera opened.
+			// also check for the daemon. if neither are
+			//    opened, there's no point in doing this.
+			if (vision && daemon) {
+				switch (config->round()) {
+					case 2: case 3:
+						egg = vision->scan();
+
+						// since the daemon already handles the file
+						//    just pass whatever was found to write out.
+						daemon->found_egg(cell, egg);
+						break;
+				}
 			}
 
+			// have we reached the end cell?
 			if (cell == config->end()) {
-				marquee->light(LEDs::RED);
+				marquee->light(LED::RED);
 				config->storePathToDisk(map);
 				if (config->keepGoing()) {
-					continue;
+					continue; // from the top of the for loop
 				} else {
-					break;
+					break; // out of the for loop and stop
 				}
+			}
+
+			// to be complete, we also check to see if we've
+			//    returned to the start cell.
+			if (cell == config->start()) {
+				marquee->light(LED::YELLOW | LED::RED);
+				// however, we should do more than just change the
+				//    LEDs. perhaps a stop, or a deadloop?
+				//    returning for now.
+				return(0);
 			}
 		}
 		// end run
