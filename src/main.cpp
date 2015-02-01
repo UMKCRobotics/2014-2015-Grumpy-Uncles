@@ -8,7 +8,7 @@
 #include "ArduinoInterface.h"
 #include "Configurator.h"
 #include "OCR.h"
-#include "Segment.h"
+#include "LEDS.h"
 #include "USB_daemon.h"
 
 #define nop() void()
@@ -17,10 +17,6 @@ int main(void) {
 	// if the UDEV symlink exists, use /dev/ardino
 	// if not, change this to  /dev/ttymxc3
 	const std::string serialport = "/dev/arduino";
-
-	// making a udev rule would be pretty, but this
-	//    might end up being /dev/spidevX.Y
-	const std::string billboard  = "/dev/billboard";
 
 	// point to the value section of the correct gpio
 	//    pin that the GO BUTTON is connected to.
@@ -44,6 +40,42 @@ int main(void) {
 	//    one camera attached, so this is safe.
 	const int cameradevice = 0;
 
+	ArduinoInterface* arduino = new ArduinoInterface(serialport);
+	if (arduino ==  NULL) {
+		std::cerr << "MAIN :: failed on (arduino <> master) interface\n";
+		std::cerr << "MAIN :: FATAL -- bailing.\n";
+		exit (11);
+	}
+
+	Configurator* config = new Configurator(arduino, map_file);
+	if (config ==  NULL) {
+		std::cerr << "MAIN :: failed on CONFIGURATOR\n";
+		std::cerr << "MAIN :: FATAL -- bailing.\n";
+		exit (12);
+	}
+
+	OCR* vision = new OCR(cameradevice);
+	if (vision ==  NULL) {
+		std::cerr << "MAIN :: failed on Camera/OCR interface\n";
+		std::cerr << "MAIN :: NON-fatal. continuing.\n";
+	//	std::cerr << "MAIN :: FATAL -- bailing.\n";
+	//	exit (13);
+	}
+
+	LED* marquee = new LED(arduino);
+	if (marquee == NULL) {
+		std::cerr << "MAIN :: failed on LED interconnect\n";
+		std::cerr << "MAIN :: This is sort-of fatal. bailing.\n";
+		exit (14);
+	}
+
+	USB* daemon = new USB(egg_carton);
+	if (daemon == NULL) {
+		std::cerr << "MAIN :: failed on USB daemon\n";
+		std::cerr << "MAIN :: NON-fatal. continuing.\n";
+	//	exit (15);
+	}
+
 	// map is an array of CARDINALS, in human-redable form:
 	//
 	//    N, W, S, E
@@ -53,53 +85,23 @@ int main(void) {
 	//    that the robot currently occupies. when storing, cast
 	//    the number to a (char), whern reading, cast as (short)
 	char map[50] = { };
-
-	ArduinoInterface* arduino = new ArduinoInterface(serialport);
-	if (arduino ==  NULL) {
-		std::cerr << "MAIN :: failed on (arduino <> master) interface\n";
-		std::cerr << "MAIN :: FATAL -- bailing.\n";
-		exit (11);
-	}
-	Configurator* config = new Configurator(arduino, map_file);
-	if (config ==  NULL) {
-		std::cerr << "MAIN :: failed on CONFIGURATOR\n";
-		std::cerr << "MAIN :: FATAL -- bailing.\n";
-		exit (12);
-	}
-	OCR* vision = new OCR(cameradevice);
-	if (vision ==  NULL) {
-		std::cerr << "MAIN :: failed on Camera/OCR interface\n";
-		std::cerr << "MAIN :: NON-fatal. continuing.\n";
-	//	std::cerr << "MAIN :: FATAL -- bailing.\n";
-	//	exit (13);
-	}
-
-	LED* marquee = new LED(billboard);
-	if (marquee == NULL) {
-		std::cerr << "MAIN :: failed on LED/Segment display\n";
-		std::cerr << "MAIN :: This is fatal. bailing.\n";
-		exit (14);
-	}
-	USB* daemon = new USB(egg_carton);
-	if (daemon == NULL) {
-		std::cerr << "MAIN :: failed on USB daemon\n";
-		std::cerr << "MAIN :: NON-fatal. continuing.\n";
-	//	exit (15);
-	}
-
 	short cell =  0;
-	char egg = '?';			// '?' indicates a non-value
-							//     it is also a character
-							//     not used in the maze
-	char cardinal = '?';
+	char cardinal = '?';	// '?' is used as a non-value
+	char egg = '?';			//     it is also a character
+							//     not used as an egg.
 	
 	// ask the configurator where we're starting.
 	cell = config->start();
 	map[0] = (char)cell;
 
+	// since the arduino half will boot much faster than
+	//    our half, we'll need to sync with the arduino
+	//    to make sure that we're both on the same page.
+	arduino->sync();
+
 	// indicate to the operator that we are 'READY' and
 	//    waiting for the go-button to be pressed.
-	marquee->light(LED::YELLOW);
+	marquee->light(LED::BUTTON);
 
 	// do nothing until the button is pressed.
 	//    this blocks while waiting.
@@ -117,9 +119,11 @@ int main(void) {
 		//    the file and null-terminated.
 		config->loadPathFromDisk(map);
 		for(int cth = 0; map[cth] != '\0'; cth++) {
-			// the following call blocks until the robot
-			//    is done moving.
+			// get the next move in the path
 			cardinal = navigation::moveto(map[cth]);
+
+			// instruct the robot to move. this call blocks
+			//    until the robot is done moving.
 			arduino->moveCardinal(cardinal);
 		}
 
@@ -138,7 +142,7 @@ int main(void) {
 
 		#define EVER ;;
 		for (EVER) {
-			// tell the arduino to move one cell. if there's an egg
+			// tell the arduino to make one move. if there's an egg
 			//    in the start cell, we won't catch it unless we
 			//    return there.
 			arduino->proceed();
@@ -148,18 +152,20 @@ int main(void) {
 			//    moved. the lower half returns the cardinal that was
 			//    used to move - we then need to translate and store
 			//    the cell number that we've moved to.
-			cardinal = arduino->readByte();
+			cell = (short)arduino->readByte();
 
 			// take where we were (map[0]) and find out where we are
 			//    based on the cardinal returned.
-			cell = navigation::moved((short)map[0], cardinal);
+			cardinal = navigation::moved((short)map[0], cell);
 
-			// display that to the world.
-			marquee->display(cell);
-
-			// keep track of where we've been so that we can eventually
-			//    solve this maze.
-			navigation::add_to_path(map, cell, cardinal);
+			// navigation::moved returns 0 if we didn't move. in that
+			//    case, we should only add the cell we from below if
+			//    the returned value is not zero.
+			if (cardinal not_eq 0) {
+				// keep track of where we've been so that we can
+				//    eventually solve this maze.
+				navigation::add_to_path(map, cell, cardinal);
+			}
 
 			// do we need to take a picture?
 			// first, check to see if the camera opened.
@@ -197,7 +203,6 @@ int main(void) {
 				//    returning for now.
 				return(0);
 			}
-		}
-		// end run
+		} // end run
 	}
 }

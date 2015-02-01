@@ -11,6 +11,23 @@ namespace navigation {
 		WEST  = 3
 	};
 
+	char moved(short last, const short cell) {
+		switch(last - cell) {
+			case -7: return ('N'); break;
+			case -1: return ('W'); break;
+			case  1: return ('E'); break;
+			case  7: return ('S'); break;
+
+			// this indicates that we haven't moved.
+			//    perhaps we just turned in place?
+			case  0: return (0);   break;
+			// can this be triggered?
+			default:               break;
+
+			// what about case 0?
+		}
+	}
+
 	short moved(short last, const char cardinal) {
 		switch(cardinal) {
 			// EMG: a good programmer would do
@@ -40,9 +57,9 @@ namespace navigation {
 		// cell:     where i am
 		// cardinal: where i moved
 
-		// store, in the location that we were, how we moved
+		// store how we moved into the location that we were just at
 		map[(short)map[0]] = cardinal;
-		// store, in our cursor what cell we are in now
+		// store what cell we're in now to our cursor
 		map[0] = (char)cell;
 	}
 }
