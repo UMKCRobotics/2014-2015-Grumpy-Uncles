@@ -9,17 +9,28 @@
 //  53 - SS2 AKA enable
 LED marquee;
 motorCommander mc;
+char synack = 0x00;
 
 void setup() {
+    // the SPI device must come up before the LEDs are used.
     SPI.begin();
     SPI.setClockDivider(128);
     SPI.setBitOrder(MSBFIRST);
     
     Serial.begin(115200);
-   
     pinMode(A3, INPUT);
-    
     mc.init(A3);
+
+    // indicate that we're up and waiting on sync.
+    marquee.light(LED::YELLOW);
+    
+    // this sync will eventually change to use config's
+    //      OP_SYN and OP_ACK
+    do {
+        synack = Serial.read();
+    } while (synack != 'o');
+    Serial.write('k');
+    
 }
 
 short dcatch = 0;
@@ -28,8 +39,21 @@ short cell = 0;
 short light = 0;
 
 char buffer[5];
+char cmd_mask = 0xF0;
 
 void loop() {
+    // look to see if there's a command waiting on the serial line.
+    if (Serial.available() > 0) {
+        synack = Serial.read();
+        
+        // what command was it?
+        switch(synack & cmd_mask) {
+            case 0xE0: // light an LED
+                marquee->light(synack & 0x0F);
+                break;
+        }
+    }
+    
     dcatch = analogRead(A3);
     Serial.print(dcatch, DEC);
     Serial.print("  ");
