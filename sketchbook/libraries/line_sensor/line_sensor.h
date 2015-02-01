@@ -22,9 +22,7 @@ class LineSensors {
 		QTRSensorsRC bar;
 
 	public:
-		LineSensors(int constructed_threshold) {
-			// some constructor
-			threshold = constructed_threshold;
+		LineSensors() {
 			//set_calibration(cMinOn,cMaxOn,cMinOff,cMaxOff);
 			pins[0] = 14;	sensor_values[0] = 0;
 			pins[1] = 15;	sensor_values[1] = 0;
@@ -38,7 +36,9 @@ class LineSensors {
 			//	bar.calibrate();
 		}
 
-		void LS_Setup(){
+		void init(int constructed_threshold){
+			// some constructor
+			threshold = constructed_threshold;
 			pinMode(pin, OUTPUT);
 		}
 
