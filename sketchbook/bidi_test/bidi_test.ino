@@ -1,5 +1,7 @@
 #include <SPI.h>
 #include <Segment.h>
+#define ENCODER_USE_INTERRUPTS
+#include <Encoder.h>
 #include <motorCommander.h>
 
 //For our robot we will be using the i.Mx6's hardware SPI 2
@@ -43,26 +45,44 @@ char cmd_mask = 0xF0;
 
 void loop() {
     // look to see if there's a command waiting on the serial line.
-//    if (Serial.available() > 0) {
-//        synack = Serial.read();
-//        
-//        // what command was it?
-//        switch(synack & cmd_mask) {
-//            case 0xE0: // light an LED
-//                marquee->light(synack & 0x0F);
-//                break;
-//        }
-//    }
+    if (Serial.available() > 0) {
+        synack = Serial.read();
+        
+        // what command was it?
+        switch (synack) {
+            case 'w':
+                mc.MOVE_FORWARD();
+                break;
+            case 's':
+                mc.MOVE_BACKWARD();
+                break;
+            case 'a':
+                mc.TURN_LEFT();
+                break;
+            case 'd':
+                mc.TURN_RIGHT();
+                break;
+            case 'x':
+                mc.STOP();
+                break;
+            default:
+                break;
+        }
+    }
     
     dcatch = analogRead(A3);
     Serial.print(dcatch, DEC);
     Serial.print("  ");
 
     throttle = map(dcatch, 0, 1023, 255, 0);
-    mc.MOVE_FORWARD();
     Serial.print(throttle, DEC);
     Serial.print("  ");
 
+    Serial.print(mc.get_odo_left(), DEC);
+    Serial.print("  ");
+    Serial.print(mc.get_odo_right(), DEC);
+    Serial.print("  ");
+    
     light = map(dcatch, 0, 1023, 0, 15);
     marquee.light(light);
     Serial.print(light, HEX);
