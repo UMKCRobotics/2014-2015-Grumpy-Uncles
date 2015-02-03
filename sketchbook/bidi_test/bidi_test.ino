@@ -43,16 +43,16 @@ char cmd_mask = 0xF0;
 
 void loop() {
     // look to see if there's a command waiting on the serial line.
-    if (Serial.available() > 0) {
-        synack = Serial.read();
-        
-        // what command was it?
-        switch(synack & cmd_mask) {
-            case 0xE0: // light an LED
-                marquee->light(synack & 0x0F);
-                break;
-        }
-    }
+//    if (Serial.available() > 0) {
+//        synack = Serial.read();
+//        
+//        // what command was it?
+//        switch(synack & cmd_mask) {
+//            case 0xE0: // light an LED
+//                marquee->light(synack & 0x0F);
+//                break;
+//        }
+//    }
     
     dcatch = analogRead(A3);
     Serial.print(dcatch, DEC);
