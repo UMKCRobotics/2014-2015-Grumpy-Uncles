@@ -52,7 +52,6 @@
 #endif
 
 
-class Encoder;
 
 // All the data needed by interrupts is consolidated into this ugly struct
 // to facilitate assembly language optimizing of the speed critical update.
@@ -65,60 +64,12 @@ typedef struct {
 	IO_REG_TYPE            pin2_bitmask;
 	uint8_t                state;
 	int32_t                position;
-	Encoder*               self;
 } Encoder_internal_state_t;
 
-class Encoder {
-private:
-	Encoder_internal_state_t encoder;
-#ifdef ENCODER_USE_INTERRUPTS
-	uint8_t interrupts_in_use;
-#endif
-
-	// this function pointer requires a function that:
-	//    - takes zero arguments
-	//    - a return type of void
-	typedef void (*function_ptr)();
-	bool watchdog;
-	int32_t trigger;
-	int32_t origin;
-	function_ptr callback;
-
+class Encoder
+{
 public:
-	static Encoder_internal_state_t * interruptArgs[ENCODER_ARGLIST_SIZE];
-
-	Encoder() {
-		callback = NULL;
-		origin = 0;
-		trigger = 0;
-		watchdog = false;
-	}
-
-	void register_callback(int32_t reg_trigger, function_ptr reg_callback) {
-		trigger = reg_trigger;
-		callback = reg_callback;
-		Serial.println("callback registered");
-	}
-
-	// just calling .observe() will turn the watchdog on.
-	// you can also call it as .observe(true).
-	// you can turn it off by hand by calling .observe(false);
-	void observe(bool directive = true) {
-		watchdog = directive;
-		// if we're told to watch, set the coundown trigger
-		if (watchdog == true) {
-			Serial.println("watchdog ON");
-			origin = encoder.position;
-		}
-	}
-
-	bool watch_status() {
-		return watchdog;
-	}
-
-	void force_call() {
-		callback();
-	}
+	Encoder() { };
 
 	void attach(uint8_t pin1, uint8_t pin2) {
 		#ifdef INPUT_PULLUP
@@ -144,16 +95,8 @@ public:
 		if (DIRECT_PIN_READ(encoder.pin2_register, encoder.pin2_bitmask)) s |= 2;
 		encoder.state = s;
 #ifdef ENCODER_USE_INTERRUPTS
-		interruptArgs[pin1]->self = NULL;
-		interruptArgs[pin2]->self = NULL;
-		if (attach_interrupt(pin1, &encoder) == 1) {
-			interrupts_in_use += 1;
-			interruptArgs[pin1]->self = this;
-		}
-		if (attach_interrupt(pin2, &encoder) == 1) {
-			interrupts_in_use += 1;
-			interruptArgs[pin2]->self = this;
-		}
+		interrupts_in_use = attach_interrupt(pin1, &encoder);
+		interrupts_in_use += attach_interrupt(pin2, &encoder);
 #endif
 		//update_finishup();  // to force linker to include the code (does not work)
 	}
@@ -185,6 +128,13 @@ public:
 		encoder.position = p;
 	}
 #endif
+private:
+	Encoder_internal_state_t encoder;
+#ifdef ENCODER_USE_INTERRUPTS
+	uint8_t interrupts_in_use;
+#endif
+public:
+	static Encoder_internal_state_t * interruptArgs[ENCODER_ARGLIST_SIZE];
 
 //                           _______         _______       
 //               Pin1 ______|       |_______|       |______ Pin1
@@ -329,29 +279,18 @@ private:
 		switch (state) {
 			case 1: case 7: case 8: case 14:
 				arg->position++;
-				break;
+				return;
 			case 2: case 4: case 11: case 13:
 				arg->position--;
-				break;
+				return;
 			case 3: case 12:
 				arg->position += 2;
-				break;
+				return;
 			case 6: case 9:
 				arg->position -= 2;
-				break;
+				return;
 		}
 #endif
-		// is our object reference?
-		if (arg->self != NULL) {
-			// are we supposed to be watching?
-			if (arg->self->watchdog) {
-				// track the trigger.
-				if (abs(arg->position - arg->self->origin) >= arg->self->trigger) {
-					arg->self->callback();
-					arg->self->observe(false);
-				}
-			}
-		}
 	}
 /*
 #if defined(__AVR__)
@@ -412,12 +351,6 @@ private:
 #endif
 */
 
-#define pinattach(p) { \
-	case CORE_INT ## p ## _PIN: \
-		interruptArgs[p] = state; \
-		attachInterrupt(p, isr ## p, CHANGE); \
-		break; \
-}
 
 #ifdef ENCODER_USE_INTERRUPTS
 	// this giant function is an unfortunate consequence of Arduino's
