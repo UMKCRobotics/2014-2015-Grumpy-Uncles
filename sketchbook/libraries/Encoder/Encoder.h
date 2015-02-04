@@ -81,7 +81,7 @@ private:
 	typedef void (*function_ptr)();
 	bool watchdog;
 	int32_t trigger;
-	int32_t watch_trigger;
+	int32_t origin;
 	function_ptr callback;
 
 public:
@@ -89,7 +89,7 @@ public:
 
 	Encoder() {
 		callback = NULL;
-		watch_trigger= 0;
+		origin = 0;
 		trigger = 0;
 		watchdog = false;
 	}
@@ -108,7 +108,7 @@ public:
 		// if we're told to watch, set the coundown trigger
 		if (watchdog == true) {
 			Serial.println("watchdog ON");
-			watch_trigger = trigger;
+			origin = encoder.position;
 		}
 	}
 
@@ -346,8 +346,7 @@ private:
 			// are we supposed to be watching?
 			if (arg->self->watchdog) {
 				// track the trigger.
-			//	if (abs(arg->position - arg->self->origin) >= arg->self->trigger) {
-				if ((--arg->self->watch_trigger) <= 0) {
+				if (abs(arg->position - arg->self->origin) >= arg->self->trigger) {
 					arg->self->callback();
 					arg->self->observe(false);
 				}
