@@ -52,49 +52,52 @@
 #endif
 
 
-template <typename object_t>
 class Encoder;
 
 // All the data needed by interrupts is consolidated into this ugly struct
 // to facilitate assembly language optimizing of the speed critical update.
 // The assembly code uses auto-incrementing addressing modes, so the struct
 // must remain in exactly this order.
-template <typename object_t>
-struct Encoder_internal_state_t {
-	volatile IO_REG_TYPE*  pin1_register;
-	volatile IO_REG_TYPE*  pin2_register;
+typedef struct {
+	volatile IO_REG_TYPE * pin1_register;
+	volatile IO_REG_TYPE * pin2_register;
 	IO_REG_TYPE            pin1_bitmask;
 	IO_REG_TYPE            pin2_bitmask;
 	uint8_t                state;
 	int32_t                position;
-	Encoder<object_t>*     self;
-};
+	Encoder*               self;
+} Encoder_internal_state_t;
 
-template <typename object_t>
 class Encoder {
 private:
-	bool watchdog;
-	int32_t trigger;
-	int32_t watch_trigger;
-	object_t* object;
-	Encoder_internal_state_t<object_t> encoder;
+	Encoder_internal_state_t encoder;
 #ifdef ENCODER_USE_INTERRUPTS
 	uint8_t interrupts_in_use;
 #endif
 
+	// this function pointer requires a function that:
+	//    - takes zero arguments
+	//    - a return type of void
+	typedef void (*function_ptr)();
+	bool watchdog;
+	int32_t trigger;
+	int32_t watch_trigger;
+	function_ptr callback;
+
 public:
-	static Encoder_internal_state_t<object_t>* interruptArgs[ENCODER_ARGLIST_SIZE];
+	static Encoder_internal_state_t * interruptArgs[ENCODER_ARGLIST_SIZE];
 
 	Encoder() {
-		object = NULL;
+		callback = NULL;
 		watch_trigger= 0;
 		trigger = 0;
 		watchdog = false;
 	}
 
-	void register_callback(int32_t reg_trigger, object_t* reg_object) {
+	void register_callback(int32_t reg_trigger, function_ptr reg_callback) {
 		trigger = reg_trigger;
-		object = reg_object;
+		callback = reg_callback;
+		Serial.println("callback registered");
 	}
 
 	// just calling .observe() will turn the watchdog on.
@@ -104,6 +107,7 @@ public:
 		watchdog = directive;
 		// if we're told to watch, set the coundown trigger
 		if (watchdog == true) {
+			Serial.println("watchdog ON");
 			watch_trigger = trigger;
 		}
 	}
@@ -113,7 +117,7 @@ public:
 	}
 
 	void force_call() {
-		object->callback();
+		callback();
 	}
 
 	void attach(uint8_t pin1, uint8_t pin2) {
@@ -230,7 +234,7 @@ public:
 */
 
 private:
-	static void update(Encoder_internal_state_t<object_t> *arg) {
+	static void update(Encoder_internal_state_t *arg) {
 #if defined(__AVR__)
 		// The compiler believes this is just 1 line of code, so
 		// it will inline this function into each interrupt
@@ -344,7 +348,7 @@ private:
 				// track the trigger.
 			//	if (abs(arg->position - arg->self->origin) >= arg->self->trigger) {
 				if ((--arg->self->watch_trigger) <= 0) {
-					arg->self->object->callback();
+					arg->self->callback();
 					arg->self->observe(false);
 				}
 			}
@@ -420,7 +424,7 @@ private:
 	// this giant function is an unfortunate consequence of Arduino's
 	// attachInterrupt function not supporting any way to pass a pointer
 	// or other context to the attached function.
-	static uint8_t attach_interrupt(uint8_t pin, Encoder_internal_state_t<object_t> *state) {
+	static uint8_t attach_interrupt(uint8_t pin, Encoder_internal_state_t *state) {
 		switch (pin) {
 		#ifdef CORE_INT0_PIN
 			case CORE_INT0_PIN:
@@ -978,28 +982,28 @@ private:
 #if defined(ENCODER_USE_INTERRUPTS) && defined(ENCODER_OPTIMIZE_INTERRUPTS)
 #if defined(__AVR__)
 #if defined(INT0_vect) && CORE_NUM_INTERRUPT > 0
-ISR(INT0_vect) { Encoder<object_t>::update(Encoder<object_t>::interruptArgs[SCRAMBLE_INT_ORDER(0)]); }
+ISR(INT0_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(0)]); }
 #endif
 #if defined(INT1_vect) && CORE_NUM_INTERRUPT > 1
-ISR(INT1_vect) { Encoder<object_t>::update(Encoder<object_t>::interruptArgs[SCRAMBLE_INT_ORDER(1)]); }
+ISR(INT1_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(1)]); }
 #endif
 #if defined(INT2_vect) && CORE_NUM_INTERRUPT > 2
-ISR(INT2_vect) { Encoder<object_t>::update(Encoder<object_t>::interruptArgs[SCRAMBLE_INT_ORDER(2)]); }
+ISR(INT2_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(2)]); }
 #endif
 #if defined(INT3_vect) && CORE_NUM_INTERRUPT > 3
-ISR(INT3_vect) { Encoder<object_t>::update(Encoder<object_t>::interruptArgs[SCRAMBLE_INT_ORDER(3)]); }
+ISR(INT3_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(3)]); }
 #endif
 #if defined(INT4_vect) && CORE_NUM_INTERRUPT > 4
-ISR(INT4_vect) { Encoder<object_t>::update(Encoder<object_t>::interruptArgs[SCRAMBLE_INT_ORDER(4)]); }
+ISR(INT4_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(4)]); }
 #endif
 #if defined(INT5_vect) && CORE_NUM_INTERRUPT > 5
-ISR(INT5_vect) { Encoder<object_t>::update(Encoder<object_t>::interruptArgs[SCRAMBLE_INT_ORDER(5)]); }
+ISR(INT5_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(5)]); }
 #endif
 #if defined(INT6_vect) && CORE_NUM_INTERRUPT > 6
-ISR(INT6_vect) { Encoder<object_t>::update(Encoder<object_t>::interruptArgs[SCRAMBLE_INT_ORDER(6)]); }
+ISR(INT6_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(6)]); }
 #endif
 #if defined(INT7_vect) && CORE_NUM_INTERRUPT > 7
-ISR(INT7_vect) { Encoder<object_t>::update(Encoder<object_t>::interruptArgs[SCRAMBLE_INT_ORDER(7)]); }
+ISR(INT7_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(7)]); }
 #endif
 #endif // AVR
 #endif // ENCODER_OPTIMIZE_INTERRUPTS

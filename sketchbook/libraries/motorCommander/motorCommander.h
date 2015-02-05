@@ -28,10 +28,6 @@ class motor {
 			analogWrite(pin_two, throttle);
 		}
 
-		void callback() {
-			stop();
-		}
-
 		void stop() {
 			if (forward) {
 				digitalWrite(pin_two, HIGH);
@@ -56,8 +52,8 @@ class motorCommander {
 
 		short quarter_turn = 280;
 
-		Encoder<motor> odo_left;
-		Encoder<motor> odo_right;
+		Encoder odo_left;
+		Encoder odo_right;
 
 		void set_throttle() {
 			throttle = map(analogRead(throttle_pin), 0, 1023, 255, 0);
@@ -76,9 +72,6 @@ class motorCommander {
 			left_rear.attach  ( 4,  5);
 			right_front.attach( 8, 10);
 			right_rear.attach (12, 11);
-
-			odo_left.register_callback(quarter_turn, &left_front);
-			odo_right.register_callback(quarter_turn, &right_front);
 		}
 
 		void MOVE_FORWARD() {
