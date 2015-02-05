@@ -13,10 +13,6 @@ LED marquee;
 motorCommander mc;
 char synack = 0x00;
 
-void mc_callback() {
-    mc.stop();
-}
-
 void setup() {
     // the SPI device must come up before the LEDs are used.
     SPI.begin();
@@ -26,8 +22,7 @@ void setup() {
     Serial.begin(115200);
     pinMode(A3, INPUT);
     mc.init(A3);
-    mc.register_callback(&mc_callback());
-    
+
     // indicate that we're up and waiting on sync.
     marquee.light(LED::YELLOW);
     
