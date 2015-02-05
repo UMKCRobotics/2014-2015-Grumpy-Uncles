@@ -119,14 +119,6 @@ class motorCommander {
 		}
 
 		void TURN_LEFT() {
-			set_throttle();
-			odo_left.observe();
-			odo_right.observe();
-
-			left_front.go_reverse(throttle);
-			right_front.go_forward(throttle);
-		}
-/*		void TURN_LEFT() {
 			// will delay by a set amount for now.
 			// need to use encoder data.
 			bool stop_l = false;
@@ -156,7 +148,7 @@ class motorCommander {
 				}
 			} while (!(stop_l && stop_r));
 		}
-*/
+
 		void TURN_RIGHT() {
 			// will delay by a set amount for now.
 			// need to use encoder data.
