@@ -108,13 +108,6 @@ class Configurator{
     }
     
     void sendConfig(HardwareSerial* output_stream){
-//       //Wait on sync byte that says we are ready to transmit.
-       char synack = 0x00;
-       do {
-           synack = output_stream->read();
-       } while(synack != OP_SYN);
-       output_stream->write(OP_ACK);
-
        // decdided not to wait on a sync. this data should
        //    sit in the buffer until called upon.
        //
@@ -131,8 +124,10 @@ class Configurator{
        //
        //Then send the data.
        //use output_stream->write(BYTE)
-       output_stream->write((byte)cur_round);
-       output_stream->write((byte)cur_part);
+//       output_stream->write((byte)cur_round);
+//       output_stream->write((byte)cur_part);
+       output_stream->print(cur_round, DEC);
+       output_stream->print(cur_part, DEC);
     }
     
     byte getThrottle(){

@@ -5,6 +5,7 @@ class IRsensor{
     int pin;
     float ir_const;
   public:
+    IRsensor() {}
     IRsensor(int n_pin, float n_const)
       :pin(n_pin), ir_const(n_const) {}
     
@@ -13,7 +14,10 @@ class IRsensor{
     int getPin() {return pin;}
 
     void attach(int n_pin, float n_const)
-	:pin(n_pin), ir_const(n_const) {}
+	{
+	   pin = n_pin; 
+           ir_const = n_const;
+	}
 	
     
     float getDistance(){
@@ -34,18 +38,29 @@ class worldSensor{
 	public:
 		worldSensor(){
 			
-          		front.attach(A1,1621.5);
-          		l_front.attach(A0,1621.5);
-          		r_front.attach(A2,1611.5);
+          		front.attach(A1,1610.5);
+          		l_front.attach(A2,1600.5);
+          		r_front.attach(A0,1600.5);
 
 			//l_rear.attach(4,1611.5);
 			//r_rear.attach(4,1611.5);
         	}
+
+        
+                float rightDistance(){
+                    return r_front.getDistance();
+                }
+                float frontDistance(){
+                    return front.getDistance();
+                }
+                
+                float leftDistance(){
+                    return l_front.getDistance();
+                }
         
         
         	bool check_front_wall(){
-			// 3 is fine for now, will find better value later
-          		if (front.getDistance() < 3){
+          		if (front.getDistance() < 4){
             			return true;
           		}
           
@@ -55,8 +70,7 @@ class worldSensor{
         	}
         
        		bool check_right_wall(){
-			// 3 is fine for now, will find better value later
-          		if (r_front.getDistance() < 3){
+          		if (r_front.getDistance() < 4){
             			return true;
           		}
           
@@ -66,8 +80,7 @@ class worldSensor{
         	}
         
         	bool check_left_wall(){
-			// 3 is fine for now, will find better value later
-          		if (l_front.getDistance() < 3){
+          		if (l_front.getDistance() < 4){
             			return true;
           		}
           

@@ -1,4 +1,3 @@
-#include "Cardinal.h"
 
 class mazeSolver{
   private:
@@ -6,6 +5,20 @@ class mazeSolver{
     bool openings [3];
   public:
     enum walls{R, F, L};
+    
+    float RIGHT(){
+         return ws.rightDistance();
+    }
+    
+    float FRONT(){
+         return ws.frontDistance();
+    }
+    
+    float LEFT(){
+         return ws.leftDistance();
+    }
+    
+
     
     dir::Cardinal computeNextmove(dir::Cardinal current_direction)
     {
@@ -55,4 +68,3 @@ class mazeSolver{
       }
 }
     };
- 

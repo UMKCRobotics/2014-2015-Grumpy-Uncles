@@ -50,6 +50,8 @@ class motorCommander {
 		byte speed_l;
 		byte speed_r;
 
+		dir::Cardinal current_direction;
+
 		short quarter_turn = 280;
 
 		Encoder odo_left;
@@ -64,7 +66,50 @@ class motorCommander {
 			// left side is backwards owing to pinning.
 			odo_left.attach(27, 26);
 			odo_right.attach(24, 25);
+			current_direction = dir::NORTH;
 		}
+
+		dir::Cardinal get_direction() {
+			return current_direction;
+		}
+
+		short moveCardinal(dir::Cardinal move_to) {
+			short desired_direction = current_direction - move_to;
+            switch (desired_direction){
+                case 0:
+                            MOVE_FORWARD();
+                            break;
+                    case 1: case -3:
+                            TURN_LEFT();
+                            current_direction = (dir::Cardinal)(current_direction - 1);
+                            break;
+                    case 2: case -2:
+                            TURN_RIGHT();
+                            current_direction = (dir::Cardinal)(current_direction + 1);
+                            break;
+                    case 3: case -1:
+                            TURN_RIGHT();
+                            current_direction = (dir::Cardinal)(current_direction + 1);
+                            break;
+            }
+
+            switch(current_direction){
+                    case -1:
+                            current_direction = dir::WEST;
+                            break;
+                    case -2:
+                            current_direction = dir::SOUTH;
+                            break;
+                    case -3:
+                            current_direction = dir::EAST;
+                            break;
+                    case -4: case 4:
+                            current_direction = dir::NORTH;
+                            break;
+            }
+
+            return(desired_direction);
+	    }
 
 		void init(byte pin_t) {
 			throttle_pin = pin_t;
