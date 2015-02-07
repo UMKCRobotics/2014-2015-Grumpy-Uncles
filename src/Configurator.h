@@ -14,6 +14,7 @@ class Configurator {
 		short result;
 		std::string c_mapfile;
 
+		ArduinoInterface* arduino;
 		bool searchRemainingTime;
 		
 	public:
@@ -21,9 +22,21 @@ class Configurator {
 			// the serialib returns values that we should
 			//    use for trouble-shooting. see serialib.cpp
 			//    for more information.
-			interface->sync();
-			c_round = interface->readByte();
-			c_part  = interface->readByte();
+			arduino = interface;
+			MYPOS = 0;
+			c_mapfile = mapfile;
+
+			// do we keep searching when we reach the end?
+			// configured to false during testing.
+			// during actual runs, set to true.
+			searchRemainingTime = false;
+		}
+
+		void acquireConfig() {
+			c_round = (short)arduino->readByte();
+			std::cout << "CONFIG :: acquire --> c_round " << c_round << std::endl;
+			c_part  = (short)arduino->readByte();
+			std::cout << "CONFIG :: acquire --> c_part " << c_part << std::endl;
 			switch(c_round){
 				case 1:
 					c_start = 48;
@@ -37,17 +50,9 @@ class Configurator {
 					c_start = 49;
 					c_end = 1;
 					break;
-			
 			}
-			MYPOS = 0;
-			c_mapfile = mapfile;
-
-			// do we keep searching when we reach the end?
-			// configured to false during testing.
-			// during actual runs, set to true.
-			searchRemainingTime = false;
 		}
-
+			
 		bool keepGoing() {
 			return searchRemainingTime;
 		}
@@ -94,9 +99,10 @@ class Configurator {
 			// read a GPIO pin for the 'GO' button.
 			// return a value based on its state
 			// I hope we can plug the btn into a GPIO.
-			char value = 0x00;
+			char value = '1';
 			int gopin = open(pin_file, O_RDONLY);
 
+			std::cerr << "CONFIG :: wait_on_go --> press the button\n";
 			// block, until the button is pressed.
 			do {
 				read(gopin, &value, 1);
@@ -106,10 +112,10 @@ class Configurator {
 				//    to the front of the file.
 				lseek(gopin, 0, SEEK_SET);
 				usleep(250);
-			} while (gopin == '1');
+			} while (value == '1');
 			// '1' is what the board registers an
 			//    unpressed button as.
-
+			std::cerr << std::endl;
 			close(gopin);
 			return true;
 		}

@@ -9,14 +9,16 @@ class LED {
 
 	public:
 		enum COLORS {
-			OFF    = 0x00;
-			BUTTON = 0x01;
-			RED    = 0x02;
-			YELLOW = 0x04;
-			GREEN  = 0x08;
+			OFF    = 0x00,
+			BUTTON = 0x01,
+			RED    = 0x02,
+			YELLOW = 0x04,
+			GREEN  = 0x08,
 		};
 
-		LED() { };
+		LED(ArduinoInterface* if_arduino) {
+			arduino = if_arduino;	
+		}
 
 		~LED() { };
 
@@ -29,7 +31,7 @@ class LED {
 			uint8_t tunnel = (colors & mask);
 
 			tunnel |= header;
-			arduino->writeByte((byte)(0xEF & colors));
+			arduino->writeByte(tunnel);
 		}
 };
 

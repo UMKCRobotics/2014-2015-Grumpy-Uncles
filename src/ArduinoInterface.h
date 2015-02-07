@@ -73,11 +73,12 @@ class ArduinoInterface {
 		//    is solid.
 		// also not sure if this is even needed.
 		void sync() {
-			this->writeByte(OP_SYN);
-			while((this->readByte()) != OP_ACK);
+			writeByte(OP_SYN);
+			while((readByte()) != OP_ACK);
 			// a better way to do this is time out,
 			//    flush the line if possible and then
 			//    restart from the top of sync()
+			std::cerr << "ARD_IF :: sync --> SYNC achieved. proceed.\n";
 		}
 
 		void moveCardinal(char cardinal) {

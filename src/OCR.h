@@ -19,7 +19,7 @@ class OCR {
 			if (!capture->isOpened()) {
 				std::cerr << "OCR :: Failure to open default camera device '0'\n";
 				std::cerr << "OCR :: non-fatal, Bailing (for now)\n";
-				exit(31);
+//				exit(31);
 			}
 
 			tessa = new tesseract::TessBaseAPI();

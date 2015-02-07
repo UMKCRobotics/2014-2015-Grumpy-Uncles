@@ -39,6 +39,7 @@ int main(void) {
 	//    discover what this is. the udoo will only have
 	//    one camera attached, so this is safe.
 	const int cameradevice = 0;
+	std::cout << "MAIN :: up and running. beginning initializations.\n";
 
 	ArduinoInterface* arduino = new ArduinoInterface(serialport);
 	if (arduino ==  NULL) {
@@ -46,6 +47,7 @@ int main(void) {
 		std::cerr << "MAIN :: FATAL -- bailing.\n";
 		exit (11);
 	}
+	std::cout << "MAIN :: ArduinoInterface up and running.\n";
 
 	Configurator* config = new Configurator(arduino, map_file);
 	if (config ==  NULL) {
@@ -53,6 +55,7 @@ int main(void) {
 		std::cerr << "MAIN :: FATAL -- bailing.\n";
 		exit (12);
 	}
+	std::cout << "MAIN :: Configurator up and running.\n";
 
 	OCR* vision = new OCR(cameradevice);
 	if (vision ==  NULL) {
@@ -61,6 +64,7 @@ int main(void) {
 	//	std::cerr << "MAIN :: FATAL -- bailing.\n";
 	//	exit (13);
 	}
+	std::cout << "MAIN :: Camera up and running.\n";
 
 	LED* marquee = new LED(arduino);
 	if (marquee == NULL) {
@@ -68,6 +72,7 @@ int main(void) {
 		std::cerr << "MAIN :: This is sort-of fatal. bailing.\n";
 		exit (14);
 	}
+	std::cout << "MAIN :: Segment interface up and running.\n";
 
 	USB* daemon = new USB(egg_carton);
 	if (daemon == NULL) {
@@ -75,6 +80,7 @@ int main(void) {
 		std::cerr << "MAIN :: NON-fatal. continuing.\n";
 	//	exit (15);
 	}
+	std::cout << "MAIN :: USB Daemon up and running.\n";
 
 	// map is an array of CARDINALS, in human-redable form:
 	//
@@ -90,23 +96,30 @@ int main(void) {
 	char egg = '?';			//     it is also a character
 							//     not used as an egg.
 	
+	// since the arduino half will boot much faster than
+	//    our half, we'll need to sync with the arduino
+	//    to make sure that we're both on the same page.
+	std::cout << "MAIN :: waiting on sync ";
+	arduino->sync();
+	std::cout << ".. SYNCHED\n";
+
+	config->acquireConfig();
+
 	// ask the configurator where we're starting.
 	cell = config->start();
 	map[0] = (char)cell;
 
-	// since the arduino half will boot much faster than
-	//    our half, we'll need to sync with the arduino
-	//    to make sure that we're both on the same page.
-	arduino->sync();
-
+	std::cout << "MAIN :: config acquired.\n";
 	// indicate to the operator that we are 'READY' and
 	//    waiting for the go-button to be pressed.
 	marquee->light(LED::BUTTON);
 
+	std::cout << "MAIN :: Ready. Waiting for 'GO'\n";
 	// do nothing until the button is pressed.
 	//    this blocks while waiting.
 	config->wait_on_go(gopin.c_str());
 
+	std::cout << "MAIN :: And we're off.\n";
 	// the button has been pressed. let's start with
 	//    turning the go light on.
 	marquee->light(LED::GREEN);
@@ -137,7 +150,7 @@ int main(void) {
 		} else {
 			// light up the yellow to indicate that
 			//    the camera did not start up.
-			marquee->light(LED::GREEN | LED::YELLOW);
+		//	marquee->light(LED::GREEN | LED::YELLOW);
 		}
 
 		#define EVER ;;
