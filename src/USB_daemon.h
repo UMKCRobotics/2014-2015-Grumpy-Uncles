@@ -47,6 +47,10 @@ class USB {
 			//    bytes written, or some other error checking.
 		}
 
+		bool isRunning() {
+			return(running);
+		}
+
 		void run() {
 			if (not running) {
 				// start the thread using wait_for_usb();

@@ -145,12 +145,14 @@ int main(void) {
 	} else {
 		// start the USB daemon thread
 		// this better not block!
-		if (vision) {
+		if (vision->isOpened()) {
+			std::cout << "MAIN :: vision is on, starting daemon.\n";
 			daemon? daemon->run() : nop();
 		} else {
 			// light up the yellow to indicate that
 			//    the camera did not start up.
-		//	marquee->light(LED::GREEN | LED::YELLOW);
+			std::cout << "MAIN :: vision is OFF. no deamon.\n";
+			marquee->light(LED::GREEN | LED::YELLOW);
 		}
 
 		#define EVER ;;
@@ -158,6 +160,7 @@ int main(void) {
 			// tell the arduino to make one move. if there's an egg
 			//    in the start cell, we won't catch it unless we
 			//    return there.
+			std::cout << "MAIN :: tell the arduino to proceed.\n";
 			arduino->proceed();
 		
 			// from the above, that means we just block on this line:
@@ -166,7 +169,7 @@ int main(void) {
 			//    used to move - we then need to translate and store
 			//    the cell number that we've moved to.
 			cell = (short)arduino->readByte();
-
+			std::cout << "MAIN :: moved. got back (" << cell << ")\n";
 			// take where we were (map[0]) and find out where we are
 			//    based on the cardinal returned.
 			cardinal = navigation::moved((short)map[0], cell);
@@ -184,7 +187,7 @@ int main(void) {
 			// first, check to see if the camera opened.
 			// also check for the daemon. if neither are
 			//    opened, there's no point in doing this.
-			if (vision && daemon) {
+			if (vision->isOpened() && daemon->isRunning()) {
 				switch (config->round()) {
 					case 2: case 3:
 						egg = vision->scan();

@@ -33,6 +33,10 @@ class OCR {
 			delete(tessa);
 		}
 
+		bool isOpened() {
+			return (capture->isOpened());
+		}
+
 		// thread?
 		char scan() {
 			// clear the buffer of any stray frames.
