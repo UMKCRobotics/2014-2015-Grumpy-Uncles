@@ -22,12 +22,12 @@ class Configurator{
     
     Configurator() {
 		throttle_pin = A3;
-		round_switch_pin1 = 35;
-		round_switch_feed = 37;
-		round_switch_pin2 = 39;
-		part_switch_pin1 = 34;
-		part_switch_feed = 36;
-		part_switch_pin2 = 38;
+		round_switch_pin1 = 37;
+		round_switch_feed = 39;
+		round_switch_pin2 = 41;
+		part_switch_pin1 = 36;
+		part_switch_feed = 38;
+		part_switch_pin2 = 40;
 
 		throttle = 0;
 		cur_round = 0;

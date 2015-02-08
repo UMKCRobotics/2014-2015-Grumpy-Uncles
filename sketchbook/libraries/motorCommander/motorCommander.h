@@ -75,6 +75,9 @@ class motorCommander {
 
 		short moveCardinal(dir::Cardinal move_to) {
 			short desired_direction = current_direction - move_to;
+			Serial.print("\ndesired: ");
+			Serial.println(desired_direction, DEC);
+
             switch (desired_direction){
                 case 0:
                             MOVE_FORWARD();

@@ -2,7 +2,9 @@
 #include <Segment.h>
 #define ENCODER_USE_INTERRUPTS
 #include <Encoder.h>
+#include <Cardinal.h>
 #include <motorCommander.h>
+#include <arduinoConfig.h>
 
 //For our robot we will be using the i.Mx6's hardware SPI 2
 //  which is connected to pins
@@ -12,6 +14,7 @@
 LED marquee;
 motorCommander mc;
 char synack = 0x00;
+Configurator configuration;
 
 void setup() {
     // the SPI device must come up before the LEDs are used.
@@ -25,6 +28,7 @@ void setup() {
 
     // indicate that we're up and waiting on sync.
     marquee.light(LED::YELLOW);
+    configuration.initialize();
     
     // this sync will eventually change to use config's
     //      OP_SYN and OP_ACK
@@ -93,6 +97,13 @@ void loop() {
     Serial.print(cell, DEC);
     Serial.print("  ");
 
+    configuration.setRound();
+    configuration.setPart();
+    Serial.print(configuration.getRound(), DEC);
+    Serial.print("  ");
+    Serial.print(configuration.getPart(), DEC);
+    Serial.print("  ");
+    
     marquee.inspect(buffer);
     Serial.print(dcatch, DEC);
     Serial.print("  ");
