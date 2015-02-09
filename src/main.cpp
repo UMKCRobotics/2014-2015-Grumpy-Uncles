@@ -110,6 +110,9 @@ int main(void) {
 	map[0] = (char)cell;
 
 	std::cout << "MAIN :: config acquired.\n";
+	std::cout << "MAIN :: current round (" << config->round() << ")" << std::endl;
+	std::cout << "MAIN :: current part (" << config->part() << ")" << std::endl;
+	std::cout << "MAIN :: start cell (" << cell << ")" << std::endl;
 	// indicate to the operator that we are 'READY' and
 	//    waiting for the go-button to be pressed.
 	marquee->light(LED::BUTTON);
@@ -157,6 +160,7 @@ int main(void) {
 
 		#define EVER ;;
 		for (EVER) {
+			config->wait_on_go(gopin.c_str());
 			// tell the arduino to make one move. if there's an egg
 			//    in the start cell, we won't catch it unless we
 			//    return there.
@@ -212,13 +216,13 @@ int main(void) {
 
 			// to be complete, we also check to see if we've
 			//    returned to the start cell.
-			if (cell == config->start()) {
-				marquee->light(LED::YELLOW | LED::RED);
-				// however, we should do more than just change the
-				//    LEDs. perhaps a stop, or a deadloop?
-				//    returning for now.
-				return(0);
-			}
+//			if (cell == config->start()) {
+//				marquee->light(LED::YELLOW | LED::RED);
+//				// however, we should do more than just change the
+//				//    LEDs. perhaps a stop, or a deadloop?
+//				//    returning for now.
+//				return(0);
+//			}
 		} // end run
 	}
 }

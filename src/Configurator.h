@@ -30,13 +30,15 @@ class Configurator {
 			// configured to false during testing.
 			// during actual runs, set to true.
 			searchRemainingTime = false;
+			c_round = 0;
+			c_part = 0;
+			c_start = 0;
+			c_end = 0;
 		}
 
 		void acquireConfig() {
-			c_round = (short)arduino->readByte();
-			std::cout << "CONFIG :: acquire --> c_round " << c_round << std::endl;
-			c_part  = (short)arduino->readByte();
-			std::cout << "CONFIG :: acquire --> c_part " << c_part << std::endl;
+			c_round = (short)arduino->readByte() - '0';
+			c_part  = (short)arduino->readByte() - '0';
 			switch(c_round){
 				case 1:
 					c_start = 48;
@@ -50,7 +52,13 @@ class Configurator {
 					c_start = 49;
 					c_end = 1;
 					break;
+				default:
+					std::cerr << "CONFIG :: acquire --> failure. c_round(" << c_round << ")" << std::endl;
 			}
+			std::cerr << "CONFIG :: acquire --> c_round (" << c_round << ")" << std::endl;
+			std::cerr << "CONFIG :: acquire --> c_part (" << c_part << ")" << std::endl;
+			std::cerr << "CONFIG :: acquire --> c_start (" << c_start << ")" << std::endl;
+			std::cerr << "CONFIG :: acquire --> c_end (" << c_end << ")" << std::endl;
 		}
 			
 		bool keepGoing() {
@@ -102,7 +110,6 @@ class Configurator {
 			char value = '1';
 			int gopin = open(pin_file, O_RDONLY);
 
-			std::cerr << "CONFIG :: wait_on_go --> press the button\n";
 			// block, until the button is pressed.
 			do {
 				read(gopin, &value, 1);
