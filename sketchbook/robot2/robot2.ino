@@ -1,3 +1,14 @@
+/* welcome to branch mixer.
+ *
+ * this is a second (date, 02/09/15) merge of both
+ *    arduino and udoo branches of gruncle. (gods,
+ *    i hate that name.)
+ *
+ * the primary branch is 'arduino'.
+ *
+ * for reference, look at the branch sandbox.
+ */
+
 #include <SPI.h>
 #include <Segment.h>
 #define ENCODER_USE_INTERRUPTS
