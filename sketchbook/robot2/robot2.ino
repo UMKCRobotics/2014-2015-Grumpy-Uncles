@@ -85,19 +85,18 @@ void loop() {
                 marquee.light(synack & 0x0F);
     	} else if (synack == Configurator::OP_MOVE) {
             nextMove = ms.computeNextmove(mc.get_direction());
-            Serial.print("\nnextMove: ");
-            Serial.println(nextMove, DEC);
+
     	    if (mc.moveCardinal(nextMove) == 0) {
                     //do cell math
                     switch(mc.get_direction()) {
 	                    case dir::NORTH:
-                            cell += 7;
+                            cell -= 7;
                             break;
                         case dir::EAST:
                             cell += 1;
                             break;
                         case dir::SOUTH:
-                            cell -= 7;
+                            cell += 7;
                             break;
                         case dir::WEST:
                             cell -= 1;
@@ -110,5 +109,7 @@ void loop() {
 //                Serial.write(Configurator::OP_OK);
 	    }
         }
+        marquee.display(cell);
+        synack = 0x00;
     }
 }

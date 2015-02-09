@@ -52,7 +52,7 @@ class motorCommander {
 
 		dir::Cardinal current_direction;
 
-		short quarter_turn = 280;
+		short quarter_turn = 900;
 
 		Encoder odo_left;
 		Encoder odo_right;
@@ -75,8 +75,6 @@ class motorCommander {
 
 		short moveCardinal(dir::Cardinal move_to) {
 			short desired_direction = current_direction - move_to;
-			Serial.print("\ndesired: ");
-			Serial.println(desired_direction, DEC);
 
             switch (desired_direction){
                 case 0:
@@ -84,15 +82,19 @@ class motorCommander {
                             break;
                     case 1: case -3:
                             TURN_LEFT();
+                            MOVE_FORWARD();
                             current_direction = (dir::Cardinal)(current_direction - 1);
                             break;
                     case 2: case -2:
                             TURN_RIGHT();
+                            MOVE_FORWARD();
                             current_direction = (dir::Cardinal)(current_direction + 1);
                             break;
                     case 3: case -1:
                             TURN_RIGHT();
-                            current_direction = (dir::Cardinal)(current_direction + 1);
+                            TURN_RIGHT();
+                            MOVE_FORWARD();
+                            current_direction = (dir::Cardinal)(current_direction + 2);
                             break;
             }
 
@@ -103,7 +105,7 @@ class motorCommander {
                     case -2:
                             current_direction = dir::SOUTH;
                             break;
-                    case -3:
+                    case -3: case 5:
                             current_direction = dir::EAST;
                             break;
                     case -4: case 4:

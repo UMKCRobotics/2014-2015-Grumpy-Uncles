@@ -33,12 +33,12 @@ class worldSensor{
 		IRsensor l_front;
         	IRsensor r_front;
 
-			int sane_wall_distance;
+			float sane_wall_distance;
         	//IRsensor l_rear;
         	//IRsensor r_rear;
 	public:
 		worldSensor(){
-				sane_wall_distance = 4;
+				sane_wall_distance = 4.0;
           		front.attach(A1,1610.5);
           		l_front.attach(A2,1600.5);
           		r_front.attach(A0,1600.5);
@@ -61,7 +61,7 @@ class worldSensor{
         
         
         	bool check_front_wall(){
-          		if (front.getDistance() < sane_wall_distance){
+          		if (front.getDistance() > sane_wall_distance){
             			return true;
           		}
           
@@ -71,7 +71,7 @@ class worldSensor{
         	}
         
        		bool check_right_wall(){
-          		if (r_front.getDistance() < sane_wall_distance){
+          		if (r_front.getDistance() > sane_wall_distance){
             			return true;
           		}
           
@@ -81,7 +81,7 @@ class worldSensor{
         	}
         
         	bool check_left_wall(){
-          		if (l_front.getDistance() < sane_wall_distance){
+          		if (l_front.getDistance() > sane_wall_distance){
             			return true;
           		}
           
