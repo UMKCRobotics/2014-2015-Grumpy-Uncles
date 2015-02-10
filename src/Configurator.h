@@ -55,8 +55,8 @@ class Configurator {
 				default:
 					std::cerr << "CONFIG :: acquire --> failure. c_round(" << c_round << ")" << std::endl;
 			}
-			std::cerr << "CONFIG :: acquire --> c_round (" << c_round << ")" << std::endl;
-			std::cerr << "CONFIG :: acquire --> c_part (" << c_part << ")" << std::endl;
+			std::cerr << "CONFIG :: acquire --> c_round (" << (short)c_round << ")" << std::endl;
+			std::cerr << "CONFIG :: acquire --> c_part (" << (short)c_part << ")" << std::endl;
 			std::cerr << "CONFIG :: acquire --> c_start (" << c_start << ")" << std::endl;
 			std::cerr << "CONFIG :: acquire --> c_end (" << c_end << ")" << std::endl;
 		}

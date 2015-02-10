@@ -54,17 +54,17 @@ void loop() {
             case 2: case 3:
                 cell = 49;
                 break;
-            }
-            marquee.display('o');
-            marquee.light(LED::YELLOW);
-            do {
-                synack = Serial.read();
-            } while (synack != Configurator::OP_SYN);
-            Serial.print(Configurator::OP_ACK);
+        }
+        marquee.light(LED::YELLOW);
+        do {
+            synack = Serial.read();
+        } while (synack != Configurator::OP_SYN);
+        Serial.print(Configurator::OP_ACK);
+        configuration.sendConfig(&Serial);
 
-            configuration.sendConfig(&Serial);
-            synched = true;
-	} else {
+        marquee.display('o');
+        synched = true;
+    } else {
         if (reset_held == false) {
             reset_held = !digitalRead(gopin);
         } else {
