@@ -50,7 +50,7 @@ class LED {
         #define S_FILL	0x3FFF		// fill with ones.
         #define S_Oh    0x3F00      // 'O' (oh)
         #define S_Kay   0x038C      // 'K'
-        #define OK      0x0F80      // character 'o'
+        #define OK         'o'      // character 'o'
 
         // block to hold our data.
         char display_data[5];
@@ -78,9 +78,11 @@ class LED {
         ~LED() {
         }
 
-//        void attach(SPI* devname) {
-//        	segment_device = devname;
-//        }
+		void init() {
+			SPI.begin();
+			SPI.setClockDivider(128);
+			SPI.setBitOrder(MSBFIRST);
+		}
 
         void xmit() {
             // open line to segment device

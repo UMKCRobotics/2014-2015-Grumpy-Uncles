@@ -1,8 +1,7 @@
 /* welcome to branch mixer.
  *
  * this is a second (date, 02/09/15) merge of both
- *    arduino and udoo branches of gruncle. (gods,
- *    i hate that name.)
+ *    arduino and udoo branches of grumpy uncle.
  *
  * the primary branch is 'arduino'.
  *
@@ -31,12 +30,8 @@ mazeSolver ms;
 const byte throttle_pin = A3;
 
 void setup() {
-    SPI.begin();
-    SPI.setClockDivider(128);
-    SPI.setBitOrder(MSBFIRST);
-    
-  // put your setup code here, to run once:
     Serial.begin(115200);
+    marquee.init();    
     configuration.initialize();
     mc.init(throttle_pin);
 }
@@ -60,6 +55,7 @@ void loop() {
                 cell = 49;
                 break;
             }
+            marquee.display('o');
             marquee.light(LED::YELLOW);
             do {
                 synack = Serial.read();

@@ -52,7 +52,7 @@ class motorCommander {
 
 		dir::Cardinal current_direction;
 
-		short quarter_turn = 900;
+		short quarter_turn = 800;
 
 		Encoder odo_left;
 		Encoder odo_right;
