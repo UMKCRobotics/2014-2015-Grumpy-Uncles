@@ -78,39 +78,21 @@ class motorCommander {
 
             switch (desired_direction){
                 case 0:
-                            MOVE_FORWARD();
-                            break;
-                    case 1: case -3:
-                            TURN_LEFT();
-                            MOVE_FORWARD();
-                            current_direction = (dir::Cardinal)(current_direction - 1);
-                            break;
-                    case 2: case -2:
-                            TURN_RIGHT();
-                            MOVE_FORWARD();
-                            current_direction = (dir::Cardinal)(current_direction + 1);
-                            break;
-                    case 3: case -1:
-                            TURN_RIGHT();
-                            TURN_RIGHT();
-                            MOVE_FORWARD();
-                            current_direction = (dir::Cardinal)(current_direction + 2);
-                            break;
-            }
-
-            switch(current_direction){
-                    case -1:
-                            current_direction = dir::WEST;
-                            break;
-                    case -2:
-                            current_direction = dir::SOUTH;
-                            break;
-                    case -3: case 5:
-                            current_direction = dir::EAST;
-                            break;
-                    case -4: case 4:
-                            current_direction = dir::NORTH;
-                            break;
+                    MOVE_FORWARD();
+                    break;
+                case 1: case -3:
+                    TURN_LEFT();
+                    MOVE_FORWARD();
+                    break;
+                case 2: case -2:
+                    TURN_RIGHT();
+                    MOVE_FORWARD();
+                    break;
+                case 3: case -1:
+                    TURN_RIGHT();
+                    TURN_RIGHT();
+                    MOVE_FORWARD();
+                    break;
             }
 
             return(desired_direction);
@@ -190,6 +172,8 @@ class motorCommander {
 					stop_r = true;
 				}
 			} while (!(stop_l && stop_r));
+
+			current_direction--;
 		}
 
 		void TURN_RIGHT() {
@@ -221,6 +205,8 @@ class motorCommander {
 					stop_r = true;
 				}
 			} while (!(stop_l && stop_r));
+
+            current_direction++;
 		}
 
 		int get_odo_left() {

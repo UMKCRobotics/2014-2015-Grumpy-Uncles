@@ -55,6 +55,7 @@ void loop() {
                 cell = 49;
                 break;
         }
+        marquee.display('o');
         marquee.light(LED::YELLOW);
         do {
             synack = Serial.read();
@@ -62,7 +63,6 @@ void loop() {
         Serial.print(Configurator::OP_ACK);
         configuration.sendConfig(&Serial);
 
-        marquee.display('o');
         synched = true;
     } else {
         if (reset_held == false) {
@@ -87,34 +87,31 @@ void loop() {
 
         if ((reset_held == false) && (synched == true) && (Serial.available() > 0)) {
             synack = Serial.read();
-
-	        if ((synack & cmd_led) == cmd_led) {
+            if ((synack & cmd_led) == cmd_led) {
                 marquee.light(synack & 0x0F);
-    	} else if (synack == Configurator::OP_MOVE) {
-            nextMove = ms.computeNextmove(mc.get_direction());
+            } else if (synack == Configurator::OP_MOVE) {
+                nextMove = ms.computeNextmove(mc.get_direction());
 
-    	    if (mc.moveCardinal(nextMove) == 0) {
-                    //do cell math
-                    switch(mc.get_direction()) {
-	                    case dir::NORTH:
-                            cell -= 7;
-                            break;
-                        case dir::EAST:
-                            cell += 1;
-                            break;
-                        case dir::SOUTH:
-                            cell += 7;
-                            break;
-                        case dir::WEST:
-                            cell -= 1;
-                            break;
-                    }
-                } // else, do nothing.
+                mc.moveCardinal(nextMove);
+                switch(mc.get_direction()) {
+                    case dir::NORTH:
+                        cell -= 7;
+                        break;
+                    case dir::EAST:
+                        cell += 1;
+                        break;
+                    case dir::SOUTH:
+                        cell += 7;
+                        break;
+                    case dir::WEST:
+                        cell -= 1;
+                        break;
+                }
                 Serial.write(cell);
             } else {
-//                while(mc.moveCardinal((dir::Cardinal)synack) != 0);
-//                Serial.write(Configurator::OP_OK);
-	    }
+//            while(mc.moveCardinal((dir::Cardinal)synack) != 0);
+//            Serial.write(Configurator::OP_OK);
+            }
         }
         marquee.display(cell);
         synack = 0x00;
