@@ -23,6 +23,12 @@ class mazeSolver{
     dir::Cardinal computeNextmove(dir::Cardinal current_direction)
     {
       ws.detectOpenings(openings);
+      Serial.print(openings[R], DEC);
+      Serial.print("  ");
+      Serial.print(openings[F], DEC);
+      Serial.print("  ");
+      Serial.print(openings[L], DEC);
+      Serial.println("  ");
       switch (current_direction){
         case dir::NORTH:
           if (openings[R])

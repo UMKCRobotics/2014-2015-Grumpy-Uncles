@@ -161,6 +161,10 @@ class motorCommander {
 				current_l = odo_left.read();
 				current_r = odo_right.read();
 
+				Serial.print(current_l, DEC);
+				Serial.print("  ");
+				Serial.print(current_l, DEC);
+				Serial.println("  ");
 				if (stop_l == false
 				&& (old_l - current_l) >= quarter_turn) {
 					left_front.stop();
@@ -194,6 +198,10 @@ class motorCommander {
 				current_l = odo_left.read();
 				current_r = odo_right.read();
 
+				Serial.print(current_l, DEC);
+				Serial.print("  ");
+				Serial.print(current_l, DEC);
+				Serial.println("  ");
 				if (stop_l == false
 				&& (current_l - old_l) >= quarter_turn) {
 					left_front.stop();

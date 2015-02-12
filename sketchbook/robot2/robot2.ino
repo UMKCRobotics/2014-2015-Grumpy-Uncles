@@ -48,10 +48,10 @@ void loop() {
         configuration.setRound();
         configuration.setPart();
         switch(configuration.getRound()){
-            case 1:
+            case 1: case 2:
                 cell = 48;
                 break;
-            case 2: case 3:
+            case 3:
                 cell = 49;
                 break;
         }
