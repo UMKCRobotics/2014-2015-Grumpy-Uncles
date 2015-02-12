@@ -163,7 +163,7 @@ class motorCommander {
 
 				Serial.print(current_l, DEC);
 				Serial.print("  ");
-				Serial.print(current_l, DEC);
+				Serial.print(current_r, DEC);
 				Serial.println("  ");
 				if (stop_l == false
 				&& (old_l - current_l) >= quarter_turn) {
@@ -200,7 +200,7 @@ class motorCommander {
 
 				Serial.print(current_l, DEC);
 				Serial.print("  ");
-				Serial.print(current_l, DEC);
+				Serial.print(current_r, DEC);
 				Serial.println("  ");
 				if (stop_l == false
 				&& (current_l - old_l) >= quarter_turn) {
