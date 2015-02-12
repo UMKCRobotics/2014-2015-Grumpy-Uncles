@@ -95,6 +95,9 @@ class motorCommander {
                     break;
             }
 
+			Serial.print("I am facing: ");
+			Serial.print(current_direction, DEC);
+			Serial.println();
             return(desired_direction);
 	    }
 
