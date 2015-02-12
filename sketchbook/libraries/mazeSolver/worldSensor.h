@@ -61,8 +61,8 @@ class worldSensor{
         
         
         	bool check_front_wall(){
-        		Serial.print(front.getDistance(), DEC);
-        		Serial.print("  ");
+        	//	Serial.print(front.getDistance(), DEC);
+        	//	Serial.print("  ");
           		if (front.getDistance() > sane_wall_distance){
             			return true;
           		}
@@ -73,8 +73,8 @@ class worldSensor{
         	}
         
        		bool check_right_wall(){
-        		Serial.print(r_front.getDistance(), DEC);
-        		Serial.print("  ");
+        	//	Serial.print(r_front.getDistance(), DEC);
+        	//	Serial.print("  ");
           		if (r_front.getDistance() > sane_wall_distance){
             			return true;
           		}
@@ -85,8 +85,8 @@ class worldSensor{
         	}
         
         	bool check_left_wall(){
-        		Serial.print(l_front.getDistance(), DEC);
-        		Serial.print("  ");
+        	//	Serial.print(l_front.getDistance(), DEC);
+        	//	Serial.print("  ");
           		if (l_front.getDistance() > sane_wall_distance){
             			return true;
           		}
@@ -100,7 +100,7 @@ class worldSensor{
 			openings[0] = check_right_wall();
 			openings[1] = check_front_wall();
 			openings[2] = check_left_wall();
-			Serial.println();
+		//	Serial.println();
 		}
         
     };

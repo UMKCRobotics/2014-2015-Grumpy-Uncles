@@ -75,8 +75,8 @@ class motorCommander {
 
 		short moveCardinal(dir::Cardinal move_to) {
 			short desired_direction = current_direction - move_to;
-			Serial.print("Turn difference: ");
-			Serial.println(desired_direction, DEC);
+		//	Serial.print("Turn difference: ");
+		//	Serial.println(desired_direction, DEC);
 
             switch (desired_direction){
                 case 0:
@@ -97,9 +97,9 @@ class motorCommander {
                     break;
             }
 
-			Serial.print("I am facing: ");
-			Serial.print(current_direction, DEC);
-			Serial.println();
+		//	Serial.print("I am facing: ");
+		//	Serial.print(current_direction, DEC);
+		//	Serial.println();
             return(desired_direction);
 	    }
 

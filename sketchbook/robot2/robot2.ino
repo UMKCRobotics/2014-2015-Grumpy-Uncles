@@ -60,7 +60,7 @@ void loop() {
         do {
             synack = Serial.read();
         } while (synack != Configurator::OP_SYN);
-        Serial.print(Configurator::OP_ACK);
+        Serial.write(Configurator::OP_ACK);
         configuration.sendConfig(&Serial);
 
         synched = true;
@@ -91,8 +91,8 @@ void loop() {
                 marquee.light(synack & 0x0F);
             } else if (synack == Configurator::OP_MOVE) {
                 nextMove = ms.computeNextmove(mc.get_direction());
-                Serial.print("nextMove is: ");
-                Serial.println(nextMove, DEC);
+            //    Serial.print("nextMove is: ");
+            //    Serial.println(nextMove, DEC);
 
                 mc.moveCardinal(nextMove);
                 switch(mc.get_direction()) {
