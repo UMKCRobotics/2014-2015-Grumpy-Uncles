@@ -80,15 +80,15 @@ class motorCommander {
                 case 0:
                     MOVE_FORWARD();
                     break;
-                case 1: case -3:
+                case -3: case 1:
                     TURN_LEFT();
                     MOVE_FORWARD();
                     break;
-                case 2: case -2:
+                case -1: case 3:
                     TURN_RIGHT();
                     MOVE_FORWARD();
                     break;
-                case 3: case -1:
+                case -2: case 2:
                     TURN_RIGHT();
                     TURN_RIGHT();
                     MOVE_FORWARD();

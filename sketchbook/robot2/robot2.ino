@@ -91,6 +91,8 @@ void loop() {
                 marquee.light(synack & 0x0F);
             } else if (synack == Configurator::OP_MOVE) {
                 nextMove = ms.computeNextmove(mc.get_direction());
+                Serial.print("nextMove is: ");
+                Serial.println(nextMove, DEC);
 
                 mc.moveCardinal(nextMove);
                 switch(mc.get_direction()) {
