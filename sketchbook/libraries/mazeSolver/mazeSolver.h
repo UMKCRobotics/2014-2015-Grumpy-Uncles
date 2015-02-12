@@ -40,16 +40,6 @@ class mazeSolver{
           else
             return dir::SOUTH;
             break;
-        case dir::SOUTH:
-          if (openings[R])
-            return dir::WEST;
-          else if (openings[F])
-            return dir::SOUTH;
-          else if (openings[L])
-            return dir::EAST;
-          else
-            return dir::NORTH;
-            break;
          case dir::EAST:
            if (openings[R])
             return dir::SOUTH;
@@ -59,6 +49,16 @@ class mazeSolver{
             return  dir::NORTH;
           else
             return dir::WEST;
+            break;
+        case dir::SOUTH:
+          if (openings[R])
+            return dir::WEST;
+          else if (openings[F])
+            return dir::SOUTH;
+          else if (openings[L])
+            return dir::EAST;
+          else
+            return dir::NORTH;
             break;
           case dir::WEST:
            if (openings[R])

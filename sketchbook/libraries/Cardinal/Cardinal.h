@@ -28,7 +28,7 @@ namespace dir {
 	}
 
 	Cardinal& operator--(Cardinal &c ) {
-		c = static_cast<Cardinal>( static_cast<int>(c) + 1 );
+		c = static_cast<Cardinal>( static_cast<int>(c) - 1 );
 		if (c == START_OF_LIST)
 			c = WEST;
 		return c;
