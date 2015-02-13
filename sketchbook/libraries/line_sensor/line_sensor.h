@@ -32,14 +32,13 @@ class LineSensors {
 			pins[5] = 19;	sensor_values[5] = 0;
 			pins[6] = 20;	sensor_values[6] = 0;
 			pins[7] = 21;	sensor_values[7] = 0;
-			bar.init(pins, 8);
-			//	bar.calibrate();
 		}
 
 		void init(int constructed_threshold){
-			// some constructor
+			bar.init(pins, 8);
+			//	bar.calibrate();
 			threshold = constructed_threshold;
-			pinMode(pin, OUTPUT);
+			//pinMode(pin, OUTPUT);
 		}
 
 		byte poll_sensors() {
