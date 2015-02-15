@@ -52,10 +52,19 @@ class motorCommander {
 
 		dir::Cardinal current_direction;
 
-		short quarter_turn = 820;
+		short quarter_turn;
+		short one_foot;
 
 		Encoder odo_left;
 		Encoder odo_right;
+
+		#define NUM_SENSORS 8
+		#define TIMEOUT     2500
+		#define EMITTER_PIN QTR_NO_EMITTER_PIN
+
+		uint8_t sen_pins[NUM_SENSORS];
+		unsigned int sen_values[NUM_SENSORS];
+		QTRSensorsRC sen_bar;
 
 		void set_throttle() {
 			throttle = map(analogRead(throttle_pin), 0, 1023, 255, 0);
@@ -67,6 +76,9 @@ class motorCommander {
 			odo_left.attach(27, 26);
 			odo_right.attach(24, 25);
 			current_direction = dir::NORTH;
+
+			quarter_turn = 820;
+			one_foot = 1926;
 		}
 
 		dir::Cardinal get_direction() {
@@ -105,10 +117,13 @@ class motorCommander {
 
 		void init(byte pin_t) {
 			throttle_pin = pin_t;
+
 			left_front.attach ( 7,  6);
 			left_rear.attach  ( 4,  5);
 			right_front.attach( 8, 10);
 			right_rear.attach (12, 11);
+
+			sen_bar.init(sen_pins, NUM_SENSORS, TIMEOUT, EMITTER_PIN);
 		}
 
 		void MOVE_FORWARD() {
@@ -116,13 +131,21 @@ class motorCommander {
 			set_throttle();
 			speed_l = throttle;
 
+			int32_t old_odo = (odo_left.read() + odo_right.read()) / 2;
+			int32_t current_odo;
+			bool stopped = false;
+
 			left_front.go_forward(speed_l);
 			left_rear.go_forward(speed_l);
 			right_front.go_forward(speed_l);
 			right_rear.go_forward(speed_l);
 
-			delay(1000);
-			// AS SOON AS YOU HIT THE LINE, STOP.
+			do {
+				// take an average of the current readings.
+				current_odo = (odo_left.read() + odo_right.read()) / 2;
+			} while ((current_odo - old_odo) < one_foot);
+			// using encoder ticks for now.
+			// can't get the line sensor to work.
 			STOP();
 		}
 
@@ -131,13 +154,21 @@ class motorCommander {
 			set_throttle();
 			speed_l = throttle;
 
+			int32_t old_odo = (odo_left.read() + odo_right.read()) / 2;
+			int32_t current_odo;
+			bool stopped = false;
+
 			left_front.go_reverse(speed_l);
 			left_rear.go_reverse(speed_l);
 			right_front.go_reverse(speed_l);
 			right_rear.go_reverse(speed_l);
 
-			delay(1000);
-			// AS SOON AS YOU HIT THE LINE, STOP.
+			do {
+				// take an average of the current readings.
+				current_odo = (odo_left.read() + odo_right.read()) / 2;
+			} while ((old_odo - current_odo) < one_foot);
+			// using encoder ticks for now.
+			// can't get the line sensor to work.
 			STOP();
 		}
 

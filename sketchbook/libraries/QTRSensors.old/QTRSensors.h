@@ -137,7 +137,7 @@ class QTRSensors
 
     void init(unsigned char *pins, unsigned char numSensors, unsigned char emitterPin);
 
-    unsigned char _pins[8];
+    unsigned char *_pins;
     unsigned char _numSensors;
     unsigned char _emitterPin;
     unsigned int _maxValue; // the maximum value returned by this function

@@ -3,6 +3,7 @@
 #define ENCODER_USE_INTERRUPTS
 #include <Encoder.h>
 #include <Cardinal.h>
+#include <QTRSensors.h>
 #include <motorCommander.h>
 #include <arduinoConfig.h>
 
@@ -16,6 +17,14 @@ motorCommander mc;
 char synack = 0x00;
 Configurator configuration;
 
+#define NUM_SENSORS 8
+#define TIMEOUT     2500
+#define EMITTER_PIN QTR_NO_EMITTER_PIN
+
+QTRSensorsRC bar;
+unsigned int values[NUM_SENSORS];
+uint8_t pins[NUM_SENSORS] = { 14, 15, 16, 17, 18, 19, 34, 35 };
+
 void setup() {
     // the SPI device must come up before the LEDs are used.
     SPI.begin();
@@ -25,17 +34,19 @@ void setup() {
     Serial.begin(115200);
     pinMode(A3, INPUT);
     mc.init(A3);
+    bar.init(pins, NUM_SENSORS, TIMEOUT, QTR_NO_EMITTER_PIN);
 
     // indicate that we're up and waiting on sync.
     marquee.light(LED::YELLOW);
     configuration.initialize();
     
+    Serial.println("waiting on sync -- press 's'");
     // this sync will eventually change to use config's
     //      OP_SYN and OP_ACK
     do {
         synack = Serial.read();
-    } while (synack != 'o');
-    Serial.write('k');
+    } while (synack != 's');
+    Serial.write('a');
     
 }
 
@@ -109,6 +120,12 @@ void loop() {
     Serial.print("  ");
     for (int i = 0; i < 5; i++) {
         Serial.print(buffer[i], HEX);
+        Serial.print(" ");
+    }
+    
+    bar.read(values);
+    for (int i = 0; i < 8; i++) {
+        Serial.print(values[i], DEC);
         Serial.print(" ");
     }
     Serial.println();

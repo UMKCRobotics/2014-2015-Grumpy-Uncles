@@ -13,6 +13,7 @@
 #define ENCODER_USE_INTERRUPTS
 #include <Encoder.h>
 #include <Cardinal.h>
+#include <QTRSensors.h>
 #include <motorCommander.h>
 #include <worldSensor.h>
 #include <mazeSolver.h>

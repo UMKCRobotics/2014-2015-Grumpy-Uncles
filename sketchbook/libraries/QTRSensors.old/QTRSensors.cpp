@@ -32,8 +32,8 @@
  */
 
 #include <stdlib.h>
-#include <Arduino.h>
 #include "QTRSensors.h"
+#include <Arduino.h>
 
 
 
@@ -41,7 +41,6 @@
 void QTRSensors::init(unsigned char *pins, unsigned char numSensors,
   unsigned char emitterPin)
 {
-//	Serial.println("QTRSensors::init() --> entering (superfunction)");
     calibratedMinimumOn=0;
     calibratedMaximumOn=0;
     calibratedMinimumOff=0;
@@ -52,25 +51,18 @@ void QTRSensors::init(unsigned char *pins, unsigned char numSensors,
     else
         _numSensors = numSensors;
 
-//    if (_pins == 0)
-//    {
-//        _pins = (unsigned char*)malloc(sizeof(unsigned char)*_numSensors);
-//        if (_pins == 0)
-//            return;
-//    }
+    if (_pins == 0)
+    {
+        _pins = (unsigned char*)malloc(sizeof(unsigned char)*_numSensors);
+        if (_pins == 0)
+            return;
+    }
 
-//	Serial.print("QTRSensors::init(SUPER) --> &_pins: ");
     unsigned char i;
-//    Serial.print("QTRSensors::init(SUPER) --> pins: ");
     for (i = 0; i < _numSensors; i++)
     {
         _pins[i] = pins[i];
-//        Serial.print(pins[i], DEC);
-//        Serial.print(":");
-//        Serial.print(_pins[i], DEC);
-//        Serial.print("  ");
     }
-//    Serial.println();
 
     _emitterPin = emitterPin;
 }
@@ -375,7 +367,7 @@ QTRSensorsRC::QTRSensorsRC()
     calibratedMaximumOn = 0;
     calibratedMinimumOff = 0;
     calibratedMaximumOff = 0;
-//    _pins = 0;
+    _pins = 0;
 }
 
 QTRSensorsRC::QTRSensorsRC(unsigned char* pins,
@@ -385,7 +377,7 @@ QTRSensorsRC::QTRSensorsRC(unsigned char* pins,
     calibratedMaximumOn = 0;
     calibratedMinimumOff = 0;
     calibratedMaximumOff = 0;
-//    _pins = 0;
+    _pins = 0;
 
     init(pins, numSensors, timeout, emitterPin);
 }
@@ -414,11 +406,9 @@ QTRSensorsRC::QTRSensorsRC(unsigned char* pins,
 void QTRSensorsRC::init(unsigned char* pins,
     unsigned char numSensors, unsigned int timeout, unsigned char emitterPin)
 {
-//	Serial.println("QTRSensorsRC::init --> entering.");
     QTRSensors::init(pins, numSensors, emitterPin);
 
     _maxValue = timeout;
-//    Serial.println("QTRSensorsRC::init --> leaving.");
 }
 
 
@@ -434,8 +424,8 @@ void QTRSensorsRC::readPrivate(unsigned int *sensor_values)
 {
     unsigned char i;
 
-//    if (_pins == 0)
-//        return;
+    if (_pins == 0)
+        return;
 
     for(i = 0; i < _numSensors; i++)
     {
@@ -473,7 +463,7 @@ QTRSensorsAnalog::QTRSensorsAnalog()
     calibratedMaximumOn = 0;
     calibratedMinimumOff = 0;
     calibratedMaximumOff = 0;
-//    _pins = 0;
+    _pins = 0;
 }
 
 QTRSensorsAnalog::QTRSensorsAnalog(unsigned char* pins,
@@ -484,7 +474,7 @@ QTRSensorsAnalog::QTRSensorsAnalog(unsigned char* pins,
     calibratedMaximumOn = 0;
     calibratedMinimumOff = 0;
     calibratedMaximumOff = 0;
-//    _pins = 0;
+    _pins = 0;
 
     init(pins, numSensors, numSamplesPerSensor, emitterPin);
 }
@@ -536,8 +526,8 @@ void QTRSensorsAnalog::readPrivate(unsigned int *sensor_values)
 {
     unsigned char i, j;
 
-//    if (_pins == 0)
-//        return;
+    if (_pins == 0)
+        return;
 
     // reset the values
     for(i = 0; i < _numSensors; i++)
@@ -560,8 +550,8 @@ void QTRSensorsAnalog::readPrivate(unsigned int *sensor_values)
 // the destructor frees up allocated memory
 QTRSensors::~QTRSensors()
 {
-//    if (_pins)
-//        free(_pins);
+    if (_pins)
+        free(_pins);
     if(calibratedMaximumOn)
         free(calibratedMaximumOn);
     if(calibratedMaximumOff)
