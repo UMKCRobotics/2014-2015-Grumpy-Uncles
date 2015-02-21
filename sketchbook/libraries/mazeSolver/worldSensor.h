@@ -72,12 +72,12 @@ class worldSensor{
 			float internal_front = r_front.getDistance();
 			float internal_rear = r_rear.getDistance();
 
-			Serial.print(" \n");
-			Serial.print("RIGHT: ");
-        		Serial.print(internal_front, DEC);
-        		Serial.print("  ");
-			Serial.print(internal_rear, DEC);
-			Serial.print(" \n");
+			//Serial.print(" \n");
+			//Serial.print("RIGHT: ");
+        		//Serial.print(internal_front, DEC);
+        		//Serial.print("  ");
+			//Serial.print(internal_rear, DEC);
+			//Serial.print(" \n");
 
           		if (internal_front > long_sane_wall_distance){
 				if  (internal_rear > short_sane_wall_distance)
@@ -106,7 +106,8 @@ class worldSensor{
             				return true;
           		}
 			
-//			else if (internal_rear > short_sane_wall_distance)
+			//this is bad, change to rear once IR sensor is placed correctly
+//			else if (internal_front > short_sane_wall_distance)
 				//return true;
 
           
