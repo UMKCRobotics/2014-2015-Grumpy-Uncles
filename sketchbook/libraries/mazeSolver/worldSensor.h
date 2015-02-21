@@ -57,7 +57,7 @@ class worldSensor{
         		//Serial.print(front.getDistance(), DEC);
         		//Serial.print("\n");
 
-          		if (front.getDistance() > long_sane_wall_distance){
+          		if (front.getDistance() > short_sane_wall_distance){
             			return true;
           		}
           
