@@ -21,7 +21,10 @@ class IRsensor{
 	
     
     float getDistance(){
-      return ir_const*pow(analogRead(pin), -1.1);
+      float average = (analogRead(pin)+analogRead(pin)+analogRead(pin)+analogRead(pin)+analogRead(pin))/5;
+	if (average == (1.0/0.0))
+		return 1000;
+      return ir_const*pow(average, -1.1);
     }
 };
 
@@ -33,37 +36,28 @@ class worldSensor{
 		IRsensor l_front;
         	IRsensor r_front;
 
-			float sane_wall_distance;
-        	//IRsensor l_rear;
-        	//IRsensor r_rear;
+			float long_sane_wall_distance;
+			float short_sane_wall_distance;
+        	IRsensor l_rear;
+        	IRsensor r_rear;
 	public:
 		worldSensor(){
-				sane_wall_distance = 4.0;
-          		front.attach(A1,1610.5);
-          		l_front.attach(A2,1600.5);
-          		r_front.attach(A0,1600.5);
+			long_sane_wall_distance = 10.0;
+			short_sane_wall_distance = 5.0;
 
-			//l_rear.attach(4,1611.5);
-			//r_rear.attach(4,1611.5);
+          		front.attach(A1,1610.5);
+          		l_front.attach(A5,1550.5);
+          		r_front.attach(A4,1550.5);
+
+			l_rear.attach(A2,1631.5);
+			r_rear.attach(A0,1631.5);
         	}
 
-        
-                float rightDistance(){
-                    return r_front.getDistance();
-                }
-                float frontDistance(){
-                    return front.getDistance();
-                }
-                
-                float leftDistance(){
-                    return l_front.getDistance();
-                }
-        
-        
         	bool check_front_wall(){
-        	//	Serial.print(front.getDistance(), DEC);
-        	//	Serial.print("  ");
-          		if (front.getDistance() > sane_wall_distance){
+        		//Serial.print(front.getDistance(), DEC);
+        		//Serial.print("\n");
+
+          		if (front.getDistance() > long_sane_wall_distance){
             			return true;
           		}
           
@@ -73,11 +67,25 @@ class worldSensor{
         	}
         
        		bool check_right_wall(){
-        	//	Serial.print(r_front.getDistance(), DEC);
-        	//	Serial.print("  ");
-          		if (r_front.getDistance() > sane_wall_distance){
-            			return true;
+
+
+			float internal_front = r_front.getDistance();
+			float internal_rear = r_rear.getDistance();
+
+			Serial.print(" \n");
+			Serial.print("RIGHT: ");
+        		Serial.print(internal_front, DEC);
+        		Serial.print("  ");
+			Serial.print(internal_rear, DEC);
+			Serial.print(" \n");
+
+          		if (internal_front > long_sane_wall_distance){
+				if  (internal_rear > short_sane_wall_distance)
+            				return true;
           		}
+
+			else if (internal_rear > short_sane_wall_distance)
+				return true;
           
           		else{
             			return false;
@@ -85,11 +93,22 @@ class worldSensor{
         	}
         
         	bool check_left_wall(){
-        	//	Serial.print(l_front.getDistance(), DEC);
-        	//	Serial.print("  ");
-          		if (l_front.getDistance() > sane_wall_distance){
-            			return true;
+			//Serial.print("FRONT: ");
+        		//Serial.print(l_front.getDistance(), DEC);
+        		//Serial.print("  ");
+			//Serial.print(r_front.getDistance(), DEC);
+
+			float internal_front = l_front.getDistance();
+			float internal_rear = l_rear.getDistance();
+
+          		if (internal_front > long_sane_wall_distance){
+				//if (internal_rear > short_sane_wall_distance)
+            				return true;
           		}
+			
+//			else if (internal_rear > short_sane_wall_distance)
+				//return true;
+
           
           		else{
             			return false;

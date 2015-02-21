@@ -6,29 +6,16 @@ class mazeSolver{
   public:
     enum walls{R, F, L};
     
-    float RIGHT(){
-         return ws.rightDistance();
-    }
-    
-    float FRONT(){
-         return ws.frontDistance();
-    }
-    
-    float LEFT(){
-         return ws.leftDistance();
-    }
-    
-
-    
     dir::Cardinal computeNextmove(dir::Cardinal current_direction)
     {
       ws.detectOpenings(openings);
-//      Serial.print(openings[R], DEC);
-//      Serial.print("  ");
-//      Serial.print(openings[F], DEC);
-//      Serial.print("  ");
-//      Serial.print(openings[L], DEC);
-//      Serial.println("  ");
+      Serial.print("R: ");
+      Serial.print(openings[R], DEC);
+      Serial.print(" F: ");
+      Serial.print(openings[F], DEC);
+      Serial.print(" L: ");
+      Serial.print(openings[L], DEC);
+      Serial.println(" \nNEXT: ");
       switch (current_direction){
         case dir::NORTH:
           if (openings[R])
