@@ -30,12 +30,15 @@ class LineSensors {
 			pins[3] = 17;	sensor_values[3] = 0;
 			pins[4] = 18;	sensor_values[4] = 0;
 			pins[5] = 19;	sensor_values[5] = 0;
-			pins[6] = 20;	sensor_values[6] = 0;
-			pins[7] = 21;	sensor_values[7] = 0;
+			pins[6] = 34;	sensor_values[6] = 0;
+			pins[7] = 35;	sensor_values[7] = 0;
 		}
 
-		void init(int constructed_threshold){
-			bar.init(pins, 8);
+		#define NUM_SENSORS 8
+		#define TIMEOUT     2500	// good value found in QTR library
+		#define EMITTER_PIN QTR_NO_EMITTER_PIN
+		void init(int constructed_threshold = TIMEOUT){
+			bar.init(pins, NUM_SENSORS, constructed_threshold, EMITTER_PIN);
 			//	bar.calibrate();
 			threshold = constructed_threshold;
 			//pinMode(pin, OUTPUT);
