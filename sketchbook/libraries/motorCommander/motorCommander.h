@@ -83,8 +83,8 @@ class motorCommander {
 			one_foot = 1926;
 		}
 
-		void init(byte pin_t) {
-			throttle_pin = pin_t;
+		void init() {
+			throttle_pin = A3;
 
 			left_front.attach ( 7,  6);
 			left_rear.attach  ( 4,  5);
@@ -257,6 +257,7 @@ class motorCommander {
 			int32_t old_r = odo_right.read();
 			int32_t current_l;
 			int32_t current_r;
+			unsigned char sensor_state = '?';
 
 			set_throttle();
 			left_front.go_forward(throttle);
@@ -267,12 +268,45 @@ class motorCommander {
 				current_r = odo_right.read();
 
 				if (stop_l == false
-				&& (current_l - old_l) >= quarter_turn) {
+				&& (current_l - old_l) >= quarter_revolution) {
+					// once we're past the 'wait' distance,
+					//    stop the basic loop and then start
+					//    watching the sen_bar.poll_sensors()
+					//    return value
+					stop_l = true;
+				}
+				if (stop_r == false
+				&& (old_r - current_r) >= quarter_revolution) {
+					// once we're past the 'wait' distance,
+					//    stop the basic loop and then start
+					//    watching the sen_bar.poll_sensors()
+					//    return value
+					stop_r = true;
+				}
+			} while (!(stop_l && stop_r));
+
+			// spin until the sensor bar says we've hit the
+			//    next full line.
+			do {
+				sensor_state = sen_bar.poll_sensors();
+			} while (sensor_state != LineSensors::LINE_FULL);
+
+			// then, we need to turn just a smidge more, so
+			//    twist for another quarter revolution of
+			//    the wheels.
+			stop_l = false;
+			stop_r = false;
+			do {
+				current_l = odo_left.read();
+				current_r = odo_right.read();
+
+				if (stop_l == false
+				&& (current_l - old_l) >= quarter_revolution / 2) {
 					left_front.stop();
 					stop_l = true;
 				}
 				if (stop_r == false
-				&& (old_r - current_r) >= quarter_turn) {
+				&& (old_r - current_r) >= quarter_revolution / 2) {
 					right_front.stop();
 					stop_r = true;
 				}

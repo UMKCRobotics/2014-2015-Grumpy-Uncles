@@ -29,13 +29,11 @@ Configurator configuration;
 motorCommander mc;
 mazeSolver ms;
 
-const byte throttle_pin = A3;
-
 void setup() {
     Serial.begin(115200);
     marquee.init();    
     configuration.initialize();
-    mc.init(throttle_pin);
+    mc.init();
 }
 
 const char cmd_led = 0xE0;
@@ -118,6 +116,15 @@ void loop() {
             }
         }
         marquee.display(cell);
+        // this displays the current direction as an "integer"
+        //    this should translate to:
+        //
+        //        NORTH -> 1 = 01
+        //        EAST  -> 2 = 10
+        //        SOUTH -> 3 = 11
+        //        WEST  -> 4 = 00
+        //
+        marquee.decimalp(mc.get_direction());
         synack = 0x00;
     }
 }

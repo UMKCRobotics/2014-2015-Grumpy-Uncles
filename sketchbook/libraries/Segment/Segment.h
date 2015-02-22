@@ -27,6 +27,7 @@
 }
 
 #define decimal(c, n) {                 \
+    c[3] &= 0xFC;                       \
     c[3] |=  (n & 0x0003);              \
 }
 
@@ -119,6 +120,11 @@ class LED {
         void light(int color) {
             leds(display_data, color);
             xmit();
+        }
+
+        void decimalp(int dec_point) {
+        	decimal(display_data, dec_point);
+        	xmit();
         }
         
         void display(short cell_number) {
