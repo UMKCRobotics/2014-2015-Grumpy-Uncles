@@ -18,10 +18,6 @@ int main(void) {
 	// if not, change this to  /dev/ttymxc3
 	const std::string serialport = "/dev/arduino";
 
-	// point to the value section of the correct gpio
-	//    pin that the GO BUTTON is connected to.
-	const std::string gopin = "/sys/class/gpio/gpio35/value";
-
 	// generate filenames based on the current date and time.
 	//    this allows tracking of files based on run times.
 	//    the only way that files could be overwritten is if
@@ -99,9 +95,9 @@ int main(void) {
 	// since the arduino half will boot much faster than
 	//    our half, we'll need to sync with the arduino
 	//    to make sure that we're both on the same page.
-	std::cout << "MAIN :: waiting on sync ";
+	std::cout << "MAIN :: waiting on sync..\n";
 	arduino->sync();
-	std::cout << ".. SYNCHED\n";
+	std::cout << "MAIN :: SYNCHED\n";
 
 	config->acquireConfig();
 
@@ -120,7 +116,7 @@ int main(void) {
 	std::cout << "MAIN :: Ready. Waiting for 'GO'\n";
 	// do nothing until the button is pressed.
 	//    this blocks while waiting.
-	config->wait_on_go(gopin.c_str());
+	config->wait_on_go();
 
 	std::cout << "MAIN :: And we're off.\n";
 	// the button has been pressed. let's start with
@@ -160,7 +156,7 @@ int main(void) {
 
 		#define EVER ;;
 		for (EVER) {
-			config->wait_on_go(gopin.c_str());
+			config->wait_on_go();
 			// tell the arduino to make one move. if there's an egg
 			//    in the start cell, we won't catch it unless we
 			//    return there.

@@ -18,7 +18,7 @@ class OCR {
 			capture = new cv::VideoCapture(dev);
 			if (!capture->isOpened()) {
 				std::cerr << "OCR :: Failure to open default camera device '0'\n";
-				std::cerr << "OCR :: non-fatal, Bailing (for now)\n";
+				std::cerr << "OCR :: non-fatal, continuing\n";
 //				exit(31);
 			}
 

@@ -14,6 +14,11 @@ class Configurator {
 		short result;
 		std::string c_mapfile;
 
+		// point to the value section of the correct gpio
+		//    pin that the GO BUTTON is connected to.
+		const char* pin_file = "/sys/class/gpio/gpio35/value";
+
+
 		ArduinoInterface* arduino;
 		bool searchRemainingTime;
 		
@@ -103,7 +108,7 @@ class Configurator {
 			fin.close();
 		}
 
-		bool wait_on_go(const char* pin_file) {
+		bool wait_on_go() {
 			// read a GPIO pin for the 'GO' button.
 			// return a value based on its state
 			// I hope we can plug the btn into a GPIO.
