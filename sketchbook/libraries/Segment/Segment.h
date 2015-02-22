@@ -51,7 +51,6 @@ class LED {
         #define S_FILL	0x3FFF		// fill with ones.
         #define S_Oh    0x3F00      // 'O' (oh)
         #define S_Kay   0x038C      // 'K'
-        #define OK         'o'      // character 'o'
 
         // block to hold our data.
         char display_data[5];
@@ -62,6 +61,7 @@ class LED {
 //        byte segment_pin;
         
     public:
+    	const char OK = 'o';		// for passing in 'OK'
         enum COLORS {
             OFF    = 0x00,
             RED    = 0x02,
@@ -122,10 +122,15 @@ class LED {
             xmit();
         }
 
-        void decimalp(int dec_point) {
+        void decimalp(int& dec_point) {
         	decimal(display_data, dec_point);
         	xmit();
         }
+
+		// for the sake of readability, this is a wrapper
+		void direction(int dec_point) {
+			decimalp(dec_point);
+		}
         
         void display(short cell_number) {
             if (cell_number == OK) {    // matches 'O' (oh)

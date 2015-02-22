@@ -44,6 +44,9 @@ unsigned long release_time = 0;
 const byte gopin = 41;
 
 void loop() {
+    // first, check to make sure that we've been synchronized
+    //    with the upper half. if not, re-read the configuration
+    //    and wait on the sync byte.
     if (synched == false) {
         configuration.setRound();
         configuration.setPart();
@@ -55,7 +58,14 @@ void loop() {
                 cell = 49;
                 break;
         }
-        marquee.display('o');
+        // maybe this will remind someone that we
+        //    should start out facing north.
+        //
+        // you know -- in case they forget that but
+        //    remember how to read the coded direction.
+        mc.set_direction(dir::NORTH);
+        marquee.direction(mc.get_direction());
+        marquee.display(marquee.OK);
         marquee.light(LED::YELLOW);
         do {
             synack = Serial.read();
@@ -124,7 +134,7 @@ void loop() {
         //        SOUTH -> 3 = 11
         //        WEST  -> 4 = 00
         //
-        marquee.decimalp(mc.get_direction());
+        marquee.direction(mc.get_direction());
         synack = 0x00;
     }
 }

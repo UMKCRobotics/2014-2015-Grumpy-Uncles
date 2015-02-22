@@ -52,6 +52,7 @@ class motorCommander {
 
 		dir::Cardinal current_direction;
 
+		float rear_motor_ratio;
 		short quarter_revolution;
 		short quarter_turn;
 		short one_foot;
@@ -59,6 +60,8 @@ class motorCommander {
 		Encoder odo_left;
 		Encoder odo_right;
 
+		// am using defines here because the QTR library uses
+		//    them, and when in rome...
 		#define NUM_SENSORS 8
 		#define TIMEOUT     2500
 		#define EMITTER_PIN QTR_NO_EMITTER_PIN
@@ -73,11 +76,23 @@ class motorCommander {
 
 	public:
 		motorCommander() { 
+			// YOU MUST ALWAYS PLACE THE ROBOT ON THE BOARD FACING NORTH!
+			// NORTH is in the direction of smaller numbers;
+			//    i.e., 48 -> 41 and 49 -> 42.
+			current_direction = dir::NORTH;
+
+			// this number comes from Darren's magic trig bag.
+			// the idea here is that the rear motors are applied
+			//     a fraction of the front wheel's power. this
+			//     _should_ allow the bot to turn where we want.
+			//     (in-between the front wheels)
+			rear_motor_ratio = .70909;
+
 			// left side is backwards owing to pinning.
 			odo_left.attach(27, 26);
 			odo_right.attach(24, 25);
-			current_direction = dir::NORTH;
 
+			// a full revolution of the encoder is 1200 ticks.
 			quarter_revolution = 300;
 			quarter_turn = 820;
 			one_foot = 1926;
@@ -92,6 +107,10 @@ class motorCommander {
 			right_rear.attach (12, 11);
 
 			sen_bar.init();
+		}
+
+		void set_direction(dir::Cardinal new_direction) {
+			current_direction = new_direction;
 		}
 
 		dir::Cardinal get_direction() {
@@ -224,10 +243,17 @@ class motorCommander {
 			int32_t old_r = odo_right.read();
 			int32_t current_l;
 			int32_t current_r;
+			int32_t speed_rear;
 
 			set_throttle();
-			left_front.go_reverse(throttle);
-			right_front.go_forward(throttle);
+			// yes, this will demote the actual answer to an
+			//    integer, but that's okay. we can afford to
+			//    lose some precision on this.
+			speed_rear = throttle * rear_motor_ratio;
+			left_front.go_forward(throttle);
+			left_rear.go_forward(speed_rear);
+			right_front.go_reverse(throttle);
+			right_rear.go_reverse(speed_rear);
 
 			do {
 				current_l = odo_left.read();
@@ -248,6 +274,50 @@ class motorCommander {
 			current_direction--;
 		}
 
+		void TURN_RIGHT() {
+			// will delay by a set amount for now.
+			// need to use encoder data.
+			bool stop_l = false;
+			bool stop_r = false;
+			int32_t old_l = odo_left.read();
+			int32_t old_r = odo_right.read();
+			int32_t current_l;
+			int32_t current_r;
+			int32_t speed_rear;
+
+			set_throttle();
+			// yes, this will demote the actual answer to an
+			//    integer, but that's okay. we can afford to
+			//    lose some precision on this.
+			speed_rear = throttle * rear_motor_ratio;
+			left_front.go_reverse(throttle);
+			left_rear.go_reverse(speed_rear);
+			right_front.go_forward(throttle);
+			right_rear.go_forward(speed_rear);
+
+
+			do {
+				current_l = odo_left.read();
+				current_r = odo_right.read();
+
+				if (stop_l == false
+				&& (current_l - old_l) >= quarter_turn) {
+					left_front.stop();
+					stop_l = true;
+				}
+				if (stop_r == false
+				&& (old_r - current_r) >= quarter_turn) {
+					right_front.stop();
+					stop_r = true;
+				}
+			} while (!(stop_l && stop_r));
+
+			current_direction++;
+		}
+
+/* holding off on this for a little while.
+ * will need a LOT more pen-and-paper testing
+ *    before we apply anything like this.
 		void TURN_RIGHT() {
 			// will delay by a set amount for now.
 			// need to use encoder data.
@@ -314,7 +384,9 @@ class motorCommander {
 
             current_direction++;
 		}
-
+ *
+ * end quarantined code.
+ */
 		int get_odo_left() {
 			return(odo_left.read());
 		}
