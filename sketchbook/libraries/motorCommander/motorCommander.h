@@ -52,6 +52,7 @@ class motorCommander {
 
 		dir::Cardinal current_direction;
 
+		short quarter_revolution;
 		short quarter_turn;
 		short one_foot;
 
@@ -64,7 +65,7 @@ class motorCommander {
 
 		uint8_t sen_pins[NUM_SENSORS];
 		unsigned int sen_values[NUM_SENSORS];
-		QTRSensorsRC sen_bar;
+		LineSensors sen_bar;
 
 		void set_throttle() {
 			throttle = map(analogRead(throttle_pin), 0, 1023, 255, 0);
@@ -77,8 +78,20 @@ class motorCommander {
 			odo_right.attach(24, 25);
 			current_direction = dir::NORTH;
 
+			quarter_revolution = 300;
 			quarter_turn = 820;
 			one_foot = 1926;
+		}
+
+		void init(byte pin_t) {
+			throttle_pin = pin_t;
+
+			left_front.attach ( 7,  6);
+			left_rear.attach  ( 4,  5);
+			right_front.attach( 8, 10);
+			right_rear.attach (12, 11);
+
+			sen_bar.init();
 		}
 
 		dir::Cardinal get_direction() {
@@ -115,35 +128,58 @@ class motorCommander {
             return(desired_direction);
 	    }
 
-		void init(byte pin_t) {
-			throttle_pin = pin_t;
-
-			left_front.attach ( 7,  6);
-			left_rear.attach  ( 4,  5);
-			right_front.attach( 8, 10);
-			right_rear.attach (12, 11);
-
-			sen_bar.init(sen_pins, NUM_SENSORS, TIMEOUT, EMITTER_PIN);
-		}
-
 		void MOVE_FORWARD() {
 			STOP();
 			set_throttle();
 			speed_l = throttle;
+			speed_r = throttle;
 
 			int32_t old_odo = (odo_left.read() + odo_right.read()) / 2;
 			int32_t current_odo;
 			bool stopped = false;
+			unsigned char sensor_state = '?';
 
 			left_front.go_forward(speed_l);
 			left_rear.go_forward(speed_l);
-			right_front.go_forward(speed_l);
-			right_rear.go_forward(speed_l);
+			right_front.go_forward(speed_r);
+			right_rear.go_forward(speed_r);
 
 			do {
 				// take an average of the current readings.
 				current_odo = (odo_left.read() + odo_right.read()) / 2;
-			} while ((current_odo - old_odo) < one_foot);
+				if ((current_odo - old_odo) > quarter_revolution) {
+					sensor_state = sen_bar.poll_sensors();
+				} else {
+					sen_bar.poll_sensors();
+				}
+
+				int drift = sen_bar.read_line();
+//				Serial.print("MC :: MFWD --> drift: ");
+//				Serial.print(drift, DEC);
+//				for (int sth = 0; sth < 8; sth++) {
+//					Serial.print(sth, DEC);
+//					Serial.print(": ");
+//					Serial.print(sen_bar.value(sth), DEC);
+//					Serial.print("\t");
+//				}
+//				Serial.println();
+				if (drift < 0) {
+					drift = map(abs(drift), 0, 3500, 0, 100);
+					speed_r = throttle - (throttle * (drift / 100));
+					speed_l = throttle + (throttle * (drift / 100));
+				} else if (drift > 0) {
+					drift = map(abs(drift), 0, 3500, 0, 100);
+					speed_r = throttle + (throttle * (drift / 100));
+					speed_l = throttle - (throttle * (drift / 100));
+				}
+
+				left_front.go_forward(speed_l);
+				left_rear.go_forward(speed_l);
+				right_front.go_forward(speed_r);
+				right_rear.go_forward(speed_r);
+
+			} while (sensor_state != LineSensors::LINE_FULL && (current_odo - old_odo) < one_foot);
+//			} while ((current_odo - old_odo) < one_foot);
 			// using encoder ticks for now.
 			// can't get the line sensor to work.
 			STOP();
@@ -160,8 +196,8 @@ class motorCommander {
 
 			left_front.go_reverse(speed_l);
 			left_rear.go_reverse(speed_l);
-			right_front.go_reverse(speed_l);
-			right_rear.go_reverse(speed_l);
+			right_front.go_reverse(speed_r);
+			right_rear.go_reverse(speed_r);
 
 			do {
 				// take an average of the current readings.

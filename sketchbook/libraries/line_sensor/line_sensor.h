@@ -21,7 +21,9 @@ class LineSensors {
 		int threshold;
 		QTRSensorsRC bar;
 
+
 	public:
+		static const unsigned char LINE_FULL = 0xFF;
 		LineSensors() {
 			//set_calibration(cMinOn,cMaxOn,cMinOff,cMaxOff);
 			pins[0] = 14;	sensor_values[0] = 0;
