@@ -1,0 +1,1 @@
+g++ -std=c++11 ./main.cpp -o gadget -I ../include -L ../lib -I/usr/include/opencv -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -ltesseract -lwait -ludev -lblkid -lcap -lario
