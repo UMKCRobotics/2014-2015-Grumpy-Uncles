@@ -86,7 +86,13 @@ class motorCommander {
 			//     a fraction of the front wheel's power. this
 			//     _should_ allow the bot to turn where we want.
 			//     (in-between the front wheels)
-			rear_motor_ratio = .70909;
+			// owing to how the motor control board is currently
+			//     working, in order to go slower you need to
+			//     generate a throttle with a higher value.
+			// for now, I'll test with 1 + (Darren's Ratio)
+			rear_motor_ratio = 1.70909;
+			//rear_motor_ratio = .29191;
+
 
 			// left side is backwards owing to pinning.
 			odo_left.attach(27, 26);
@@ -250,10 +256,16 @@ class motorCommander {
 			//    integer, but that's okay. we can afford to
 			//    lose some precision on this.
 			speed_rear = throttle * rear_motor_ratio;
-			left_front.go_forward(throttle);
-			left_rear.go_forward(speed_rear);
-			right_front.go_reverse(throttle);
-			right_rear.go_reverse(speed_rear);
+			left_rear.go_reverse(throttle);
+			left_front.go_reverse(speed_rear);
+			right_rear.go_forward(throttle);
+			right_front.go_forward(speed_rear);
+
+//			Serial.print("MC :: TR --> throttle: ");
+//			Serial.print(throttle, DEC);
+//			Serial.print(", scaled: ");
+//			Serial.print(speed_rear, DEC);
+//			Serial.println();
 
 			do {
 				current_l = odo_left.read();
@@ -290,11 +302,16 @@ class motorCommander {
 			//    integer, but that's okay. we can afford to
 			//    lose some precision on this.
 			speed_rear = throttle * rear_motor_ratio;
-			left_front.go_reverse(throttle);
-			left_rear.go_reverse(speed_rear);
-			right_front.go_forward(throttle);
-			right_rear.go_forward(speed_rear);
+			left_rear.go_forward(throttle);
+			left_front.go_forward(speed_rear);
+			right_rear.go_reverse(throttle);
+			right_front.go_reverse(speed_rear);
 
+//			Serial.print("MC :: TR --> throttle: ");
+//			Serial.print(throttle, DEC);
+//			Serial.print(", scaled: ");
+//			Serial.print(speed_rear, DEC);
+//			Serial.println();
 
 			do {
 				current_l = odo_left.read();
