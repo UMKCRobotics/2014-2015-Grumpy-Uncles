@@ -90,8 +90,8 @@ class motorCommander {
 			//     working, in order to go slower you need to
 			//     generate a throttle with a higher value.
 			// for now, I'll test with 1 + (Darren's Ratio)
-			rear_motor_ratio = 1.70909;
-			//rear_motor_ratio = .29191;
+			//rear_motor_ratio = 1.70909;
+			rear_motor_ratio = .29191;
 
 
 			// left side is backwards owing to pinning.
@@ -189,14 +189,30 @@ class motorCommander {
 //				}
 //				Serial.println();
 				if (drift < 0) {
-					drift = map(abs(drift), 0, 3500, 0, 100);
-					speed_r = throttle - (throttle * (drift / 100));
-					speed_l = throttle + (throttle * (drift / 100));
-				} else if (drift > 0) {
+//					drift = map(abs(drift), 0, 3500, 4, 12);
+//					drift = (drift * drift);
+//					drift += throttle;
+//					speed_r = map((throttle + drift), 0, 255, throttle, 255);
+//					speed_l = map((throttle - drift), 0, 255, 0, throttle);
 					drift = map(abs(drift), 0, 3500, 0, 100);
 					speed_r = throttle + (throttle * (drift / 100));
 					speed_l = throttle - (throttle * (drift / 100));
+				} else if (drift > 0) {
+//					drift = map(abs(drift), 0, 3500, 4, 12);
+//					drift = (drift * drift);
+//					drift += throttle;
+//					speed_l = map((throttle + drift), 0, 255, throttle, 255);
+//					speed_r = map((throttle - drift), 0, 255, 0, throttle);
+					drift = map(abs(drift), 0, 3500, 0, 100);
+					speed_r = throttle - (throttle * (drift / 100));
+					speed_l = throttle + (throttle * (drift / 100));
 				}
+
+//				Serial.print("\tL: ");
+//				Serial.print(speed_l, DEC);
+//				Serial.print("\tR: ");
+//				Serial.print(speed_r, DEC);
+//				Serial.println();
 
 				left_front.go_forward(speed_l);
 				left_rear.go_forward(speed_l);
@@ -255,17 +271,26 @@ class motorCommander {
 			// yes, this will demote the actual answer to an
 			//    integer, but that's okay. we can afford to
 			//    lose some precision on this.
-			speed_rear = throttle * rear_motor_ratio;
-			left_rear.go_reverse(throttle);
-			left_front.go_reverse(speed_rear);
-			right_rear.go_forward(throttle);
-			right_front.go_forward(speed_rear);
+//			speed_rear = throttle * rear_motor_ratio;
+			// trying a different scaling method.
+			// map the throttle into a 0(slow) -> 255(fast)
+			//    slope, multiply the ratio in to get the
+			//    difference of the motors' speed.
+			speed_rear = rear_motor_ratio * 
+			             map(throttle, 255, 0, 0, 255);
+			// then take that difference and add it into our
+			//    motor's slope.
+			speed_rear += throttle;
+			left_front.go_reverse(throttle);
+			left_rear.go_reverse(speed_rear);
+			right_front.go_forward(throttle);
+			right_rear.go_forward(speed_rear);
 
-//			Serial.print("MC :: TR --> throttle: ");
-//			Serial.print(throttle, DEC);
-//			Serial.print(", scaled: ");
-//			Serial.print(speed_rear, DEC);
-//			Serial.println();
+			Serial.print("MC :: TL --> throttle: ");
+			Serial.print(throttle, DEC);
+			Serial.print(", scaled: ");
+			Serial.print(speed_rear, DEC);
+			Serial.println();
 
 			do {
 				current_l = odo_left.read();
@@ -301,17 +326,23 @@ class motorCommander {
 			// yes, this will demote the actual answer to an
 			//    integer, but that's okay. we can afford to
 			//    lose some precision on this.
-			speed_rear = throttle * rear_motor_ratio;
-			left_rear.go_forward(throttle);
-			left_front.go_forward(speed_rear);
-			right_rear.go_reverse(throttle);
-			right_front.go_reverse(speed_rear);
+//			speed_rear = throttle * rear_motor_ratio;
+			speed_rear = rear_motor_ratio * 
+			             map(throttle, 255, 0, 0, 255);
+			// then take that difference and add it into our
+			//    motor's slope.
+			speed_rear += throttle;
 
-//			Serial.print("MC :: TR --> throttle: ");
-//			Serial.print(throttle, DEC);
-//			Serial.print(", scaled: ");
-//			Serial.print(speed_rear, DEC);
-//			Serial.println();
+			left_front.go_forward(throttle);
+			left_rear.go_forward(speed_rear);
+			right_front.go_reverse(throttle);
+			right_rear.go_reverse(speed_rear);
+
+			Serial.print("MC :: TR --> throttle: ");
+			Serial.print(throttle, DEC);
+			Serial.print(", scaled: ");
+			Serial.print(speed_rear, DEC);
+			Serial.println();
 
 			do {
 				current_l = odo_left.read();
