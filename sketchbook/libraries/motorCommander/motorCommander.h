@@ -189,20 +189,10 @@ class motorCommander {
 //				}
 //				Serial.println();
 				if (drift < 0) {
-//					drift = map(abs(drift), 0, 3500, 4, 12);
-//					drift = (drift * drift);
-//					drift += throttle;
-//					speed_r = map((throttle + drift), 0, 255, throttle, 255);
-//					speed_l = map((throttle - drift), 0, 255, 0, throttle);
 					drift = map(abs(drift), 0, 3500, 0, 100);
 					speed_r = throttle + (throttle * (drift / 100));
 					speed_l = throttle - (throttle * (drift / 100));
 				} else if (drift > 0) {
-//					drift = map(abs(drift), 0, 3500, 4, 12);
-//					drift = (drift * drift);
-//					drift += throttle;
-//					speed_l = map((throttle + drift), 0, 255, throttle, 255);
-//					speed_r = map((throttle - drift), 0, 255, 0, throttle);
 					drift = map(abs(drift), 0, 3500, 0, 100);
 					speed_r = throttle - (throttle * (drift / 100));
 					speed_l = throttle + (throttle * (drift / 100));
@@ -286,11 +276,11 @@ class motorCommander {
 			right_front.go_forward(throttle);
 			right_rear.go_forward(speed_rear);
 
-			Serial.print("MC :: TL --> throttle: ");
-			Serial.print(throttle, DEC);
-			Serial.print(", scaled: ");
-			Serial.print(speed_rear, DEC);
-			Serial.println();
+//			Serial.print("MC :: TL --> throttle: ");
+//			Serial.print(throttle, DEC);
+//			Serial.print(", scaled: ");
+//			Serial.print(speed_rear, DEC);
+//			Serial.println();
 
 			do {
 				current_l = odo_left.read();
@@ -338,11 +328,11 @@ class motorCommander {
 			right_front.go_reverse(throttle);
 			right_rear.go_reverse(speed_rear);
 
-			Serial.print("MC :: TR --> throttle: ");
-			Serial.print(throttle, DEC);
-			Serial.print(", scaled: ");
-			Serial.print(speed_rear, DEC);
-			Serial.println();
+//			Serial.print("MC :: TR --> throttle: ");
+//			Serial.print(throttle, DEC);
+//			Serial.print(", scaled: ");
+//			Serial.print(speed_rear, DEC);
+//			Serial.println();
 
 			do {
 				current_l = odo_left.read();
