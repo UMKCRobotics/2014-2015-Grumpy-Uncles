@@ -4,6 +4,7 @@
 #include <Encoder.h>
 #include <Cardinal.h>
 #include <QTRSensors.h>
+#include <line_sensor.h>
 #include <motorCommander.h>
 #include <arduinoConfig.h>
 
@@ -33,7 +34,7 @@ void setup() {
     
     Serial.begin(115200);
     pinMode(A3, INPUT);
-    mc.init(A3);
+    mc.init();
     bar.init(pins, NUM_SENSORS, TIMEOUT, QTR_NO_EMITTER_PIN);
 
     // indicate that we're up and waiting on sync.
@@ -54,6 +55,7 @@ short dcatch = 0;
 short throttle = 0;
 short cell = 0;
 short light = 0;
+short drift = 0;
 
 char buffer[5];
 char cmd_mask = 0xF0;
@@ -66,7 +68,10 @@ void loop() {
         // what command was it?
         switch (synack) {
             case 'w':
-                mc.MOVE_FORWARD();
+                // move_forward accepts a boolean to control line_following
+                //    true: use drift adjustments
+                //    false: ignore the line_sensor and adjustments.
+                mc.MOVE_FORWARD(false);
                 break;
             case 's':
                 mc.MOVE_BACKWARD();
@@ -117,17 +122,22 @@ void loop() {
     
     marquee.inspect(buffer);
     Serial.print(dcatch, DEC);
-    Serial.print("  ");
+    Serial.print("  0x");
     for (int i = 0; i < 5; i++) {
         Serial.print(buffer[i], HEX);
-        Serial.print(" ");
     }
     
     bar.read(values);
+    Serial.print("  [ ");
     for (int i = 0; i < 8; i++) {
         Serial.print(values[i], DEC);
         Serial.print(" ");
     }
+
+    drift = bar.readLine(values) - 3500;
+    Serial.print("] ");
+    Serial.print(drift, DEC);
+    
     Serial.println();
     delay(200);
 }

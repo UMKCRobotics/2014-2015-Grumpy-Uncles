@@ -49,6 +49,8 @@ class motorCommander {
 		byte throttle;
 		byte speed_l;
 		byte speed_r;
+		#define SPEED_MIN 200
+		#define SPEED_MAX 100
 
 		dir::Cardinal current_direction;
 
@@ -153,7 +155,18 @@ class motorCommander {
             return(desired_direction);
 	    }
 
-		void MOVE_FORWARD() {
+		// the boolean is for testing. pass false to ignore
+		//    any of the line following.
+		// it's worth noting that any throttle value greater
+		//    than 230 is reasonably too slow.
+		// good testing value seems to be around 180.
+		// it looks like 100 should be a good upper bound for
+		//    fastness. anything less than 100 is too fast.
+		//
+		// fast / 0 < 100 < goldilocks < 230 < 255 / slow
+		//
+		// for roundiness, let's do: 100 < speed < 200
+		void MOVE_FORWARD(bool follow = true) {
 			STOP();
 			set_throttle();
 			speed_l = throttle;
@@ -188,14 +201,44 @@ class motorCommander {
 //					Serial.print("\t");
 //				}
 //				Serial.println();
-				if (drift < 0) {
-					drift = map(abs(drift), 0, 3500, 0, 100);
-					speed_r = throttle + (throttle * (drift / 100));
-					speed_l = throttle - (throttle * (drift / 100));
-				} else if (drift > 0) {
-					drift = map(abs(drift), 0, 3500, 0, 100);
-					speed_r = throttle - (throttle * (drift / 100));
-					speed_l = throttle + (throttle * (drift / 100));
+				if (follow) {
+					if (drift < 0) {
+						// line is to the left of center.
+						// we're drifting to the right.
+						//    left go slower (higher)
+						//    right go faster (lower)
+						drift = (abs(drift) / 100) * 2;
+						speed_l = throttle + drift;
+						if (speed_l > SPEED_MIN) {
+							speed_l = SPEED_MIN;
+						}
+						speed_r = throttle - drift;
+						if (speed_r < SPEED_MAX) {
+							speed_r = SPEED_MAX;
+						}
+						// need to watch the bounds on speed_l and _r
+						// make sure they don't go too fast or slow.
+//						drift = map(abs(drift), 0, 3500, 0, 100);
+//						speed_r = throttle + (throttle * (drift / 100));
+//						speed_l = throttle - (throttle * (drift / 100));
+					} else if (drift > 0) {
+						// line is to the right of center.
+						// we're drifiting to the left.
+						//    left go faster (lower)
+						//    right go slower (higher)
+						drift = (abs(drift) / 100) * 2;
+						speed_l = throttle - drift;
+						if (speed_l < SPEED_MAX) {
+							speed_l = SPEED_MAX;
+						}
+						speed_r = throttle + drift;
+						if (speed_r > SPEED_MIN) {
+							speed_r = SPEED_MIN;
+						}
+//						drift = map(abs(drift), 0, 3500, 0, 100);
+//						speed_r = throttle - (throttle * (drift / 100));
+//						speed_l = throttle + (throttle * (drift / 100));
+					}
 				}
 
 //				Serial.print("\tL: ");
@@ -216,6 +259,7 @@ class motorCommander {
 			STOP();
 		}
 
+		// shouldn't be used. here for completness.
 		void MOVE_BACKWARD() {
 			STOP();
 			set_throttle();
@@ -285,15 +329,17 @@ class motorCommander {
 			do {
 				current_l = odo_left.read();
 				current_r = odo_right.read();
-
+				
 				if (stop_l == false
-				&& (old_l - current_l) >= quarter_turn) {
+				&& abs(old_l - current_l) >= quarter_turn) {
 					left_front.stop();
+					left_rear.stop();
 					stop_l = true;
 				}
 				if (stop_r == false
-				&& (current_r - old_r) >= quarter_turn) {
+				&& abs(current_r - old_r) >= quarter_turn) {
 					right_front.stop();
+					right_rear.stop();
 					stop_r = true;
 				}
 			} while (!(stop_l && stop_r));
@@ -334,18 +380,21 @@ class motorCommander {
 //			Serial.print(speed_rear, DEC);
 //			Serial.println();
 
+
 			do {
 				current_l = odo_left.read();
 				current_r = odo_right.read();
 
 				if (stop_l == false
-				&& (current_l - old_l) >= quarter_turn) {
+				&& abs(current_l - old_l) >= quarter_turn) {
 					left_front.stop();
+					left_rear.stop();
 					stop_l = true;
 				}
 				if (stop_r == false
-				&& (old_r - current_r) >= quarter_turn) {
+				&& abs(old_r - current_r) >= quarter_turn) {
 					right_front.stop();
+					right_rear.stop();
 					stop_r = true;
 				}
 			} while (!(stop_l && stop_r));
