@@ -34,7 +34,7 @@ int main(void) {
 	// this uses some internal video4linux routines to
 	//    discover what this is. the udoo will only have
 	//    one camera attached, so this is safe.
-	const int cameradevice = 0;
+	const int cameradevice = 7;
 	std::cout << "MAIN :: up and running. beginning initializations.\n";
 
 	ArduinoInterface* arduino = new ArduinoInterface(serialport);
