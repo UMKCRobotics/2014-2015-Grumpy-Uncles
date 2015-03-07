@@ -1,6 +1,7 @@
 #ifndef OCR_H
 #define OCR_H
 
+#include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <tesseract/baseapi.h>
 #include <string>
@@ -24,8 +25,10 @@ class OCR {
 
 			tessa = new tesseract::TessBaseAPI();
 			tessa->Init(NULL, "eng");
-			tessa->SetVariable("tessedit_char_whitelist",
-				"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()");
+			tessa->SetVariable(
+				"tessedit_char_whitelist",
+				"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()"
+			);
 		}
 
 		~OCR() {
@@ -47,14 +50,23 @@ class OCR {
 			// capture a fresh (and so clean) frame from the camera
 			*capture >> frame;
 			// insert  openCV magic to clean up the image.
-
+			cv::Mat roi = frame(cv::Rect(225, 220, 220, 170));
+			// magic happens here
+			cv::cvtColor(roi, roi, CV_RGB2GRAY);
+			cv::blur(roi, roi, cv::Size(5, 5));
+			// threshold value here can and should change due to
+			//    lighting conditions at competition.
+			int th = 50;
+			cv::threshold(roi, roi, th, 255, CV_THRESH_BINARY);
+			
 			// do the tesseract thing.
-			tessa->SetImage( (uchar*)frame.data,
-			                         frame.size().width,
-			                         frame.size().height,
-			                         frame.channels(),
-			                         frame.step1()
-			               );
+			tessa->SetImage(
+				(uchar*)roi.data,
+			            roi.size().width,
+			            roi.size().height,
+			            roi.channels(),
+			            roi.step1()
+			);
 			tessa->Recognize(0);
 
 			// retreive all the output from tessa
@@ -102,12 +114,14 @@ class OCR {
 			// this stringstream will allow us to filter
 			//    the result -- so hacky.
 			std::stringstream ss;
-			ss << output;
+			ss.str(output);
 			output.clear();
 			// grab the first non-whitespace character found
 			ss >> output;
 
-			return (*output.c_str());
+			// we're only interested in the first character
+			return (output[0]);
+		//	return (*output.c_str());
 		}
 };
 
