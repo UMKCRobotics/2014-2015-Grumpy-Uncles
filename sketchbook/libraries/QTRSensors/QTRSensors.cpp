@@ -38,7 +38,7 @@
 
 
 // Base class data member initialization (called by derived class init())
-void QTRSensors::init(unsigned char *pins, unsigned char numSensors,
+void QTRSensors::init(const unsigned char *pins, unsigned char numSensors,
   unsigned char emitterPin)
 {
 //	Serial.println("QTRSensors::init() --> entering (superfunction)");
@@ -378,7 +378,7 @@ QTRSensorsRC::QTRSensorsRC()
 //    _pins = 0;
 }
 
-QTRSensorsRC::QTRSensorsRC(unsigned char* pins,
+QTRSensorsRC::QTRSensorsRC(const unsigned char* pins,
   unsigned char numSensors, unsigned int timeout, unsigned char emitterPin)
 {
     calibratedMinimumOn = 0;
@@ -411,7 +411,7 @@ QTRSensorsRC::QTRSensorsRC(unsigned char* pins,
 // modules.  If you are using a 1RC (i.e. if there is no emitter pin),
 // or if you just want the emitters on all the time and don't want to
 // use an I/O pin to control it, use a value of 255 (QTR_NO_EMITTER_PIN).
-void QTRSensorsRC::init(unsigned char* pins,
+void QTRSensorsRC::init(const unsigned char* pins,
     unsigned char numSensors, unsigned int timeout, unsigned char emitterPin)
 {
 //	Serial.println("QTRSensorsRC::init --> entering.");
@@ -476,7 +476,7 @@ QTRSensorsAnalog::QTRSensorsAnalog()
 //    _pins = 0;
 }
 
-QTRSensorsAnalog::QTRSensorsAnalog(unsigned char* pins,
+QTRSensorsAnalog::QTRSensorsAnalog(const unsigned char* pins,
   unsigned char numSensors, unsigned char numSamplesPerSensor,
   unsigned char emitterPin)
 {
@@ -513,7 +513,7 @@ QTRSensorsAnalog::QTRSensorsAnalog(unsigned char* pins,
 // modules.  If you are using a 1RC (i.e. if there is no emitter pin),
 // or if you just want the emitters on all the time and don't want to
 // use an I/O pin to control it, use a value of 255 (QTR_NO_EMITTER_PIN).
-void QTRSensorsAnalog::init(unsigned char* pins,
+void QTRSensorsAnalog::init(const unsigned char* pins,
     unsigned char numSensors, unsigned char numSamplesPerSensor,
     unsigned char emitterPin)
 {

@@ -68,14 +68,11 @@ class motorCommander {
 
 		// am using defines here because the QTR library uses
 		//    them, and when in rome...
-		#define NUM_SENSORS 8
-		#define TIMEOUT     2500
-		#define EMITTER_PIN QTR_NO_EMITTER_PIN
 
-		uint8_t sen_pins[NUM_SENSORS];
-		unsigned int sen_values[NUM_SENSORS];
 		LineSensors F_sen_bar;
 		LineSensors R_sen_bar;
+		const unsigned char F_sen_pins[LineSensors::NUM_SENSORS] = { 43, 45, 47, 42, 44, 46, 29, 28 };
+		const unsigned char R_sen_pins[LineSensors::NUM_SENSORS] = { 14, 15, 16, 17, 18, 19, 34, 35 };
 
 		void set_throttle() {
 			throttle = map(analogRead(throttle_pin), 0, 1023, 0, 255);
@@ -118,8 +115,8 @@ class motorCommander {
 			right_front.attach( 8, 10);
 			right_rear.attach (12, 11);
 
-			F_sen_bar.init(0);
-			R_sen_bar.init(1);
+			F_sen_bar.init(F_sen_pins, 1500);
+			R_sen_bar.init(R_sen_pins, 1800);
 		}
 
 		void set_direction(dir::Cardinal new_direction) {
@@ -167,17 +164,6 @@ class motorCommander {
 			right_rear.stop();
 		}
 
-		// the boolean is for testing. pass false to ignore
-		//    any of the line following.
-		// it's worth noting that any throttle value greater
-		//    than 230 is reasonably too slow.
-		// good testing value seems to be around 180.
-		// it looks like 100 should be a good upper bound for
-		//    fastness. anything less than 100 is too fast.
-		//
-		// fast / 0 < 100 < goldilocks < 230 < 255 / slow
-		//
-		// for roundiness, let's do: 100 < speed < 200
 		void MOVE_FORWARD(bool follow = true) {
 			short odo_old = (odo_left.read() + odo_right.read())/2;
 			short current;
@@ -209,18 +195,32 @@ class motorCommander {
 				R_sen_bar.poll_sensors();
 			} while(!R_sen_bar.white(0) || !R_sen_bar.white(7));
 			
-		Serial.println("Moved passed black line");
+			Serial.println("Moved past black line");
 			short distance_moved;
 			do {
 head_of_loop:
 				current = (odo_left.read() + odo_right.read())/2;
+				F_sen_bar.poll_sensors();
+				R_sen_bar.poll_sensors();
+
+				Serial.print("MC :: FOR --> Front[ ");
+				for (int sth = 0; sth < 8; sth++) {
+					Serial.print(F_sen_bar.white(sth), DEC);
+					Serial.print(" ");
+				}
+				Serial.println("]");
+				Serial.print("MC :: FOR -->  Rear[ ");
+				for (int sth = 0; sth < 8; sth++) {
+					Serial.print(R_sen_bar.white(sth), DEC);
+					Serial.print(" ");
+				}
+				Serial.println("]");
+
 				distance_moved = abs(current-odo_old);
 				Serial.print("Distance Moved: ");
 				Serial.print(distance_moved, DEC);
-				F_sen_bar.poll_sensors();
-				R_sen_bar.poll_sensors();
 				//Robot is on the black line and is center
-				if (R_sen_bar.white(2) & R_sen_bar.white(5)){
+				if (R_sen_bar.white(2) && R_sen_bar.white(5)){
 					if (!R_sen_bar.white(3) && !R_sen_bar.white(4)){
 						left_front.go_forward(throttle);
 						left_rear.go_forward(throttle);
@@ -229,14 +229,14 @@ head_of_loop:
 						Serial.println("Going forward");
 					}
 				//Robot is off course and needs to correct right
-				} else if (!R_sen_bar.white(5)){
+				} else if (!R_sen_bar.white(2)){
 					right_front.go_forward(throttle * FAST_SCALING);
 					right_rear.go_forward(throttle * FAST_SCALING);
 					left_front.go_forward(throttle * SLOW_SCALING);
 					left_rear.go_forward(throttle * SLOW_SCALING);
 					Serial.println("Drifting right");
 				//Robot is off course and needs to correct left
-				} else if (!R_sen_bar.white(2)){
+				} else if (!R_sen_bar.white(5)){
 					left_front.go_forward(throttle * FAST_SCALING);
 					left_rear.go_forward(throttle * FAST_SCALING);
 					right_front.go_forward(throttle * SLOW_SCALING);
@@ -247,13 +247,14 @@ head_of_loop:
 				if (distance_moved < (one_foot * .9)){
 					Serial.print(" < ");
 					Serial.println((one_foot * .9), DEC);
-					goto head_of_loop;
+//					goto head_of_loop;
 				} else if (distance_moved > one_foot){
-					STOP();
+					Serial.println();
+//					STOP();
 				}
 				//Serial.println(" > one_foot");
 					
-			} while ((!R_sen_bar.white(0) || !R_sen_bar.white(7)) && (F_sen_bar.white(0) || F_sen_bar.white(7)));
+			} while (!F_sen_bar.white(0) || !F_sen_bar.white(7));
 				
 			//Robot is back to black line and has moved forward a square
 			Serial.println("Back to black line");
@@ -359,11 +360,28 @@ head_of_loop:
 
 			bool on_white_check = false;
 			for (;;){
-				if (F_sen_bar.white(4)){
+
+				current_l = odo_left.read();
+				current_r = odo_right.read();
+
+				Serial.print("MC :: TRight --> Front[ ");
+				for (int sth = 0; sth < 8; sth++) {
+					Serial.print(F_sen_bar.white(sth), DEC);
+					Serial.print(" ");
+				}
+				Serial.println("]");
+				Serial.print("MC :: TRight -->  Rear[ ");
+				for (int sth = 0; sth < 8; sth++) {
+					Serial.print(R_sen_bar.white(sth), DEC);
+					Serial.print(" ");
+				}
+				Serial.println("]");
+
+				if (R_sen_bar.white(0)){
 					//moved off of black line in front of robot
 					on_white_check = true;
-				} else if (!F_sen_bar.white(4) && on_white_check){
-					if (!R_sen_bar.white(0) && !R_sen_bar.white(7)){
+				} else if (!R_sen_bar.white(0) && on_white_check){
+					if (F_sen_bar.white(0) && F_sen_bar.white(7)){
 						//We have turned and are back on the black line
 						STOP();
 						break; //exit loop, we have turned

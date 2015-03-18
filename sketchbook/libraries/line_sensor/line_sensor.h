@@ -14,36 +14,38 @@ class LineSensors {
 	nothing in this class is set in stone
 	and is subject to change based on the
 	yet-to-be-acquired line sensor library. */
-	private:
-		unsigned char pins[8];
-		unsigned int sensor_values[8];
-		int pin;
-		int threshold;
-		QTRSensorsRC bar;
 
 
 	public:
+		static const unsigned char NUM_SENSORS = 8;
+		static const unsigned short TIMEOUT = 2500;
 		static const unsigned char LINE_FULL = 0xFF;
+
+	private:
+		#define EMITTER_PIN QTR_NO_EMITTER_PIN
+//		unsigned char pins[8];
+		unsigned int sensor_values[NUM_SENSORS];
+		int threshold;
+		QTRSensorsRC bar;
+
+	public:
 		LineSensors() {
 			//default constructor
 			//used to set pins up here, moved to init so pins can be set per bar
 		}
-		#define NUM_SENSORS 8
-		#define TIMEOUT     2500	// good value found in QTR library
-		#define EMITTER_PIN QTR_NO_EMITTER_PIN
-		void init(int set, int constructed_threshold = TIMEOUT){
-			//FRONT
+		void init(const unsigned char pins[], int constructed_threshold = TIMEOUT){
+/*			//FRONT
 			//NEED PIN VALUES BELOW FOR NEW FRONT SENSOR BAR
 			if (set = 0){
 				//set_calibration(cMinOn,cMaxOn,cMinOff,cMaxOff);
-				pins[0] = 14;	sensor_values[0] = 0;
-				pins[1] = 15;	sensor_values[1] = 0;
-				pins[2] = 16;	sensor_values[2] = 0;
-				pins[3] = 17;	sensor_values[3] = 0;
-				pins[4] = 18;	sensor_values[4] = 0;
-				pins[5] = 19;	sensor_values[5] = 0;
-				pins[6] = 34;	sensor_values[6] = 0;
-				pins[7] = 35;	sensor_values[7] = 0;
+				pins[0] = 43;	sensor_values[0] = 0;
+				pins[1] = 45;	sensor_values[1] = 0;
+				pins[2] = 47;	sensor_values[2] = 0;
+				pins[3] = 42;	sensor_values[3] = 0;
+				pins[4] = 44;	sensor_values[4] = 0;
+				pins[5] = 46;	sensor_values[5] = 0;
+				pins[6] = 29;	sensor_values[6] = 0;
+				pins[7] = 28;	sensor_values[7] = 0;
 			} else {
 			//REAR
 				//set_calibration(cMinOn,cMaxOn,cMinOff,cMaxOff);
@@ -56,18 +58,26 @@ class LineSensors {
 				pins[6] = 34;	sensor_values[6] = 0;
 				pins[7] = 35;	sensor_values[7] = 0;
 			}
-			bar.init(pins, NUM_SENSORS, constructed_threshold, EMITTER_PIN);
-			//	bar.calibrate();
+*/
+			sensor_values[0] = 0;
+			sensor_values[1] = 0;
+			sensor_values[2] = 0;
+			sensor_values[3] = 0;
+			sensor_values[4] = 0;
+			sensor_values[5] = 0;
+			sensor_values[6] = 0;
+			sensor_values[7] = 0;
 			threshold = constructed_threshold;
-			//pinMode(pin, OUTPUT);
+			bar.init(pins, NUM_SENSORS, threshold, EMITTER_PIN);
+			//	bar.calibrate();
 		}
 
 		bool white(const int index){
-			if (value(index) > 1800){
+			if (value(index) < threshold){
+				return true;
+			} else {
 				return false;
 			}
-
-			return true;
 		}
 
 		byte poll_sensors() {
