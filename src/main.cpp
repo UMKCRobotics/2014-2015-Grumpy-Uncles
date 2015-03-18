@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 		std::cerr << "MAIN :: NON-fatal. continuing.\n";
 	//	exit (15);
 	}
-	std::cout << "MAIN :: USB Daemon up and running.\n";
+	std::cout << "MAIN :: USB daemon created. will spawn thread later.\n";
 
 	// map is an array of CARDINALS, in human-redable form:
 	//
@@ -152,8 +152,8 @@ int main(int argc, char* argv[]) {
 		// start the USB daemon thread
 		// this better not block!
 		if (vision->isOpened()) {
-//			std::cout << "MAIN :: vision is on, starting daemon.\n";
-//			daemon? daemon->run() : nop();
+			std::cout << "MAIN :: vision is on, starting daemon.\n";
+			daemon? daemon->run() : nop();
 		} else {
 			// light up the yellow to indicate that
 			//    the camera did not start up.

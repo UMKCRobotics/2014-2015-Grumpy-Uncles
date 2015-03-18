@@ -54,7 +54,9 @@ class USB {
 		void run() {
 			if (not running) {
 				// start the thread using wait_for_usb();
+				std::cout << "DAEMON :: run() --> starting the USB daemon" << std::endl;
 				std::thread chicken(wait_for_usb, egg_file.c_str());
+				chicken.detach();
 				running = true;
 			}
 		}
