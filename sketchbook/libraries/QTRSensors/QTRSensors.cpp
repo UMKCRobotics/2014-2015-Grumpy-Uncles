@@ -325,7 +325,6 @@ int QTRSensors::readLine(unsigned int *sensor_values,
     unsigned long avg; // this is for the weighted total, which is long
                        // before division
     unsigned int sum; // this is for the denominator which is <= 64000
-    static int last_value=0; // assume initially that the line is left.
 
     readCalibrated(sensor_values, readMode);
 
@@ -417,6 +416,7 @@ void QTRSensorsRC::init(const unsigned char* pins,
 //	Serial.println("QTRSensorsRC::init --> entering.");
     QTRSensors::init(pins, numSensors, emitterPin);
 
+	last_value = 0;
     _maxValue = timeout;
 //    Serial.println("QTRSensorsRC::init --> leaving.");
 }
@@ -519,6 +519,7 @@ void QTRSensorsAnalog::init(const unsigned char* pins,
 {
     QTRSensors::init(pins, numSensors, emitterPin);
 
+	last_value = 0;
     _numSamplesPerSensor = numSamplesPerSensor;
     _maxValue = 1023; // this is the maximum returned by the A/D conversion
 }

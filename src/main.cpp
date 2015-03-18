@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
 
 		#define EVER ;;
 		for (EVER) {
-			config->wait_on_go();
+//			config->wait_on_go();
 			// tell the arduino to make one move. if there's an egg
 			//    in the start cell, we won't catch it unless we
 			//    return there.

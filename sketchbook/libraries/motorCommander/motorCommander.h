@@ -107,7 +107,7 @@ class motorCommander {
 			one_foot = 1926;
 		}
 
-		void init() {
+		void init(int F_thresh, int R_thresh) {
 			throttle_pin = A3;
 
 			left_front.attach ( 7,  6);
@@ -115,8 +115,8 @@ class motorCommander {
 			right_front.attach( 8, 10);
 			right_rear.attach (12, 11);
 
-			F_sen_bar.init(F_sen_pins, 1500);
-			R_sen_bar.init(R_sen_pins, 1800);
+			F_sen_bar.init(F_sen_pins, F_thresh);
+			R_sen_bar.init(R_sen_pins, R_thresh);
 		}
 
 		void set_direction(dir::Cardinal new_direction) {
@@ -129,8 +129,11 @@ class motorCommander {
 
 		short moveCardinal(dir::Cardinal move_to) {
 			short desired_direction = current_direction - move_to;
+			
+			#ifdef GDEBUG
 		//	Serial.print("Turn difference: ");
 		//	Serial.println(desired_direction, DEC);
+			#endif
 
             switch (desired_direction){
                 case 0:
@@ -151,9 +154,6 @@ class motorCommander {
                     break;
             }
 
-		//	Serial.print("I am facing: ");
-		//	Serial.print(current_direction, DEC);
-		//	Serial.println();
             return(desired_direction);
 	    }
 
@@ -190,76 +190,95 @@ class motorCommander {
 			//    looking for when the front reads white and the
 			//    back reads black.
 			//
-			// this waits for the robot to move past a black line
+			// this waits for the rear sensor to move past
+			//    the first black line (where we stopped)
 			do {
 				R_sen_bar.poll_sensors();
+				F_sen_bar.poll_sensors();
 			} while(!R_sen_bar.white(0) || !R_sen_bar.white(7));
 			
-			Serial.println("Moved past black line");
 			short distance_moved;
+			bool stop_condition = false;
+			bool next_line_check = false;
 			do {
 head_of_loop:
 				current = (odo_left.read() + odo_right.read())/2;
+				distance_moved = abs(current-odo_old);
+				#ifdef GDEBUG
+//				Serial.print("Distance Moved: ");
+//				Serial.print(distance_moved, DEC);
+				#endif
 				F_sen_bar.poll_sensors();
 				R_sen_bar.poll_sensors();
 
-				Serial.print("MC :: FOR --> Front[ ");
-				for (int sth = 0; sth < 8; sth++) {
-					Serial.print(F_sen_bar.white(sth), DEC);
-					Serial.print(" ");
-				}
-				Serial.println("]");
-				Serial.print("MC :: FOR -->  Rear[ ");
-				for (int sth = 0; sth < 8; sth++) {
-					Serial.print(R_sen_bar.white(sth), DEC);
-					Serial.print(" ");
-				}
-				Serial.println("]");
+				#ifdef GDEBUG
+//				Serial.print("MC :: FOR --> Front[ ");
+//				for (int sth = 0; sth < 8; sth++) {
+//					Serial.print(F_sen_bar.white(sth), DEC);
+//					Serial.print(" ");
+//				}
+//				Serial.println("]");
+//				Serial.print("MC :: FOR -->  Rear[ ");
+//				for (int sth = 0; sth < 8; sth++) {
+//					Serial.print(R_sen_bar.white(sth), DEC);
+//					Serial.print(" ");
+//				}
+//				Serial.println("]");
+				#endif
 
-				distance_moved = abs(current-odo_old);
-				Serial.print("Distance Moved: ");
-				Serial.print(distance_moved, DEC);
-				//Robot is on the black line and is center
-				if (R_sen_bar.white(2) && R_sen_bar.white(5)){
-					if (!R_sen_bar.white(3) && !R_sen_bar.white(4)){
-						left_front.go_forward(throttle);
-						left_rear.go_forward(throttle);
-						right_front.go_forward(throttle);
-						right_rear.go_forward(throttle);
-						Serial.println("Going forward");
-					}
-				//Robot is off course and needs to correct right
-				} else if (!R_sen_bar.white(2)){
-					right_front.go_forward(throttle * FAST_SCALING);
-					right_rear.go_forward(throttle * FAST_SCALING);
-					left_front.go_forward(throttle * SLOW_SCALING);
-					left_rear.go_forward(throttle * SLOW_SCALING);
-					Serial.println("Drifting right");
-				//Robot is off course and needs to correct left
-				} else if (!R_sen_bar.white(5)){
-					left_front.go_forward(throttle * FAST_SCALING);
-					left_rear.go_forward(throttle * FAST_SCALING);
-					right_front.go_forward(throttle * SLOW_SCALING);
-					right_rear.go_forward(throttle * SLOW_SCALING);
-					Serial.println("Drifting left");
+				float skew = (R_sen_bar.read_line() + F_sen_bar.read_line()) / 2;
+				#ifdef GDEBUG
+				Serial.print("MC :: FOR --> throttle: ");
+				Serial.print(throttle, DEC);
+				Serial.print(", skew: ");
+				Serial.print(skew, DEC);
+				Serial.print(" ("); Serial.print(R_sen_bar.read_line()); Serial.print(")");
+				Serial.print(" ("); Serial.print(F_sen_bar.read_line()); Serial.print(")");
+				#endif
+				skew /= 100;
+				#ifdef GDEBUG
+				Serial.print(" -> ");
+				Serial.print(skew, DEC);
+				#endif
+				// adjust the throttle by a percentage between
+				//    what should be 1 and 9;
+				skew = (float)throttle * (float)(skew / 100) * 2;
+				#ifdef GDEBUG
+				Serial.print(" -> ");
+				Serial.print(skew, DEC);
+				Serial.println();
+				#endif
+
+				left_front.go_forward(throttle - skew);
+				left_rear.go_forward(throttle - skew);
+				right_front.go_forward(throttle + skew);
+				right_rear.go_forward(throttle + skew);
+
+				// this should be the last thing to check
+				// this will help to keep the robot moving
+				//    past the bumps and small gaps.
+				if (distance_moved < one_foot * .9) {
+					goto head_of_loop;
+				} else if (distance_moved > one_foot) {
+					stop_condition = true;
 				}
 
-				if (distance_moved < (one_foot * .9)){
-					Serial.print(" < ");
-					Serial.println((one_foot * .9), DEC);
-//					goto head_of_loop;
-				} else if (distance_moved > one_foot){
-					Serial.println();
-//					STOP();
+				if ((F_sen_bar.poll_sensors() & 0x81) == 0x81) {
+					next_line_check = true;
 				}
-				//Serial.println(" > one_foot");
-					
-			} while (!F_sen_bar.white(0) || !F_sen_bar.white(7));
+
+				if (next_line_check && ((R_sen_bar.poll_sensors() & 0x81) == 0x81)) {
+					stop_condition = true;
+				}
+			} while (stop_condition == false);
+//			} while (R_sen_bar.poll_sensors() == 0x81;
 				
 			//Robot is back to black line and has moved forward a square
+			#ifdef GDEBUG
 			Serial.println("Back to black line");
-			STOP();
 			Serial.println("Stopped");
+			#endif
+			STOP();
 		}
 
 		void TURN_LEFT() {
@@ -291,39 +310,86 @@ head_of_loop:
 			right_front.go_forward(throttle);
 			right_rear.go_forward(speed_rear);
 
-//			Serial.print("MC :: TL --> throttle: ");
-//			Serial.print(throttle, DEC);
-//			Serial.print(", scaled: ");
-//			Serial.print(speed_rear, DEC);
-//			Serial.println();
+			#ifdef GDEBUG
+			Serial.print("MC :: TL --> throttle: ");
+			Serial.print(throttle, DEC);
+			Serial.print(", scaled: ");
+			Serial.print(speed_rear, DEC);
+			Serial.println();
+			#endif
 
 			bool on_white_check = false;
-			for (;;){
-
+			bool f_line_check = false;
+			bool r_line_check = false;
+			bool stop_condition = false;
+			do {
 				current_l = odo_left.read();
 				current_r = odo_right.read();
+				F_sen_bar.poll_sensors();
+				R_sen_bar.poll_sensors();
 
-				if (F_sen_bar.white(4)){
-					//moved off of black line in front of robot
-					on_white_check = true;
-				} else if (!F_sen_bar.white(3) && on_white_check){
-					if (!R_sen_bar.white(0) && !R_sen_bar.white(7)){
-						//We have turned and are back on the black line
-						STOP();
-						break; //exit loop, we have turned
-					}
-				} else{
-					//line sensors didn't work properly
-					//use decoders
-					if ((abs(current_l - old_l) >= quarter_turn) || 
-					    (abs(current_r - old_r) >= quarter_turn)){
-						STOP();
-						break; //exit loop, we have turned
-					}
+				#ifdef GDEBUG
+				Serial.print("MC :: TL --> Front[ ");
+				for (int sth = 0; sth < 8; sth++) {
+					Serial.print(F_sen_bar.white(sth), DEC);
+					Serial.print(" ");
 				}
-			}
+				Serial.print("]");
+				Serial.print("  Rear[ ");
+				for (int sth = 0; sth < 8; sth++) {
+					Serial.print(R_sen_bar.white(sth), DEC);
+					Serial.print(" ");
+				}
+				Serial.println("]");
+				#endif
 
+				if (F_sen_bar.white(7) == false) {
+					f_line_check = true;
+				}
+
+				if (f_line_check == true && F_sen_bar.white(7) == true) {
+					on_white_check = true;
+				}
+
+				if (on_white_check == true && R_sen_bar.white(0) == false) {
+					r_line_check = true;
+				}
+
+				if (r_line_check == true && R_sen_bar.white(0) == true) {
+					stop_condition = true;
+				}
+				
+				if (
+					r_line_check == true && (
+						F_sen_bar.white(0) && F_sen_bar.white(7)
+					) || (
+						R_sen_bar.white(0) && R_sen_bar.white(7)
+					)
+				) {
+					stop_condition = true;
+				}
+
+				if (abs(old_l - current_l) > quarter_turn) {
+					left_front.stop();
+					left_rear.stop();
+					stop_l = true;
+				}
+
+				if (abs(current_r - old_r) > quarter_turn) {
+					right_front.stop();
+					right_rear.stop();
+					stop_r = true;
+				}
+
+				if (stop_l == true && stop_r == true) {
+					stop_condition = true;
+				}
+			} while (stop_condition == false);
 			current_direction--;
+			STOP();
+			#ifdef GDEBUG
+			Serial.println("MC :: TL --> STOPPED");
+			#endif
 		}
 
 		void TURN_RIGHT() {
@@ -352,11 +418,13 @@ head_of_loop:
 			right_front.go_reverse(throttle);
 			right_rear.go_reverse(speed_rear);
 
+			#ifdef GDEBUG
 //			Serial.print("MC :: TR --> throttle: ");
 //			Serial.print(throttle, DEC);
 //			Serial.print(", scaled: ");
 //			Serial.print(speed_rear, DEC);
 //			Serial.println();
+			#endif
 
 			bool on_white_check = false;
 			for (;;){
@@ -364,6 +432,7 @@ head_of_loop:
 				current_l = odo_left.read();
 				current_r = odo_right.read();
 
+				#ifdef GDEBUG
 				Serial.print("MC :: TRight --> Front[ ");
 				for (int sth = 0; sth < 8; sth++) {
 					Serial.print(F_sen_bar.white(sth), DEC);
@@ -376,6 +445,7 @@ head_of_loop:
 					Serial.print(" ");
 				}
 				Serial.println("]");
+				#endif
 
 				if (R_sen_bar.white(0)){
 					//moved off of black line in front of robot

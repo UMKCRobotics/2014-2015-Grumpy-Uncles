@@ -8,6 +8,10 @@
  * for reference, look at the branch sandbox.
  */
 
+#ifdef GDEBUG
+#undef GDEBUG
+#endif
+
 #include <SPI.h>
 #include <Segment.h>
 #define ENCODER_USE_INTERRUPTS
@@ -33,7 +37,7 @@ void setup() {
     Serial.begin(115200);
     marquee.init();    
     configuration.initialize();
-    mc.init();
+    mc.init(1200, 1200);
 }
 
 const char cmd_led = 0xE0;

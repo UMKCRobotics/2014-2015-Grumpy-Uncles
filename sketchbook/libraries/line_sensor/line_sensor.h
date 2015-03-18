@@ -34,31 +34,6 @@ class LineSensors {
 			//used to set pins up here, moved to init so pins can be set per bar
 		}
 		void init(const unsigned char pins[], int constructed_threshold = TIMEOUT){
-/*			//FRONT
-			//NEED PIN VALUES BELOW FOR NEW FRONT SENSOR BAR
-			if (set = 0){
-				//set_calibration(cMinOn,cMaxOn,cMinOff,cMaxOff);
-				pins[0] = 43;	sensor_values[0] = 0;
-				pins[1] = 45;	sensor_values[1] = 0;
-				pins[2] = 47;	sensor_values[2] = 0;
-				pins[3] = 42;	sensor_values[3] = 0;
-				pins[4] = 44;	sensor_values[4] = 0;
-				pins[5] = 46;	sensor_values[5] = 0;
-				pins[6] = 29;	sensor_values[6] = 0;
-				pins[7] = 28;	sensor_values[7] = 0;
-			} else {
-			//REAR
-				//set_calibration(cMinOn,cMaxOn,cMinOff,cMaxOff);
-				pins[0] = 14;	sensor_values[0] = 0;
-				pins[1] = 15;	sensor_values[1] = 0;
-				pins[2] = 16;	sensor_values[2] = 0;
-				pins[3] = 17;	sensor_values[3] = 0;
-				pins[4] = 18;	sensor_values[4] = 0;
-				pins[5] = 19;	sensor_values[5] = 0;
-				pins[6] = 34;	sensor_values[6] = 0;
-				pins[7] = 35;	sensor_values[7] = 0;
-			}
-*/
 			sensor_values[0] = 0;
 			sensor_values[1] = 0;
 			sensor_values[2] = 0;
@@ -68,7 +43,7 @@ class LineSensors {
 			sensor_values[6] = 0;
 			sensor_values[7] = 0;
 			threshold = constructed_threshold;
-			bar.init(pins, NUM_SENSORS, threshold, EMITTER_PIN);
+			bar.init(pins, NUM_SENSORS, TIMEOUT, EMITTER_PIN);
 			//	bar.calibrate();
 		}
 
@@ -98,6 +73,7 @@ class LineSensors {
 		}
 		
 		int read_line() {
+			poll_sensors();
 			int line = bar.readLine(sensor_values);
 			// 3500 is the mean return of the 8 sensor bar
 			line = line - 3500;

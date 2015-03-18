@@ -1,3 +1,5 @@
+#define GDEBUG
+
 #include <SPI.h>
 #include <Segment.h>
 #define ENCODER_USE_INTERRUPTS
@@ -23,13 +25,17 @@ Configurator configuration;
 #define TIMEOUT     2500
 #define EMITTER_PIN QTR_NO_EMITTER_PIN
 
-QTRSensorsRC bar;
-unsigned int values[NUM_SENSORS];
 // rear bar (backwards)
-//uint8_t pins[NUM_SENSORS] = { 14, 15, 16, 17, 18, 19, 34, 35 };
+//QTRSensorsRC Rbar;
+LineSensors Rbar;
+const uint8_t Rpins[NUM_SENSORS] = { 14, 15, 16, 17, 18, 19, 34, 35 };
+unsigned int Rvalues[NUM_SENSORS];
 
 // front bar
-uint8_t pins[NUM_SENSORS] = {43, 45, 47, 42, 44, 46, 29, 28};
+//QTRSensorsRC Fbar;
+LineSensors Fbar;
+const uint8_t Fpins[NUM_SENSORS] = {43, 45, 47, 42, 44, 46, 29, 28};
+unsigned int Fvalues[NUM_SENSORS];
 
 void setup() {
     // the SPI device must come up before the LEDs are used.
@@ -39,8 +45,9 @@ void setup() {
     
     Serial.begin(115200);
     pinMode(A3, INPUT);
-    mc.init();
-    bar.init(pins, NUM_SENSORS, TIMEOUT, QTR_NO_EMITTER_PIN);
+    mc.init(1200, 1200);
+    Fbar.init(Fpins, 1200);
+    Rbar.init(Rpins, 1200);
 
     // indicate that we're up and waiting on sync.
     marquee.light(LED::YELLOW);
@@ -126,20 +133,36 @@ void loop() {
         Serial.print(buffer[i], HEX);
     }
     
-    bar.read(values);
-    Serial.print("  [ ");
+    Serial.println();
+//    Fbar.read(Fvalues);
+    Fbar.poll_sensors();
+    Serial.print("F  [ ");
     for (int i = 0; i < 8; i++) {
-//        if (values[i] > 1800) {
-            Serial.print(values[i], DEC);
-//        } else {
-//            Serial.print(0, DEC);
-//        }
+        Serial.print(Fbar.white(i), DEC);
+        Serial.print(" ");
+    }   Serial.print("] [");
+    for (int i = 0; i < 8; i++) {
+        Serial.print(Fbar.value(i), DEC);
         Serial.print(" ");
     }
-
-    drift = bar.readLine(values) - 3500;
     Serial.print("] ");
-    Serial.print(drift, DEC);
+    drift = Fbar.read_line();
+    Serial.println(drift, DEC);
+    
+//    Rbar.read(Rvalues);
+    Rbar.poll_sensors();
+    Serial.print("R  [ ");
+    for (int i = 0; i < 8; i++) {
+        Serial.print(Rbar.white(i), DEC);
+        Serial.print(" ");
+    }   Serial.print("] [");
+    for (int i = 0; i < 8; i++) {
+        Serial.print(Rbar.value(i), DEC);
+        Serial.print(" ");
+    }
+    Serial.print("] ");
+    drift = Fbar.read_line();
+    Serial.println(drift, DEC);
     
     if (configuration.lobatt()) {
         marquee.display(marquee.LO);
