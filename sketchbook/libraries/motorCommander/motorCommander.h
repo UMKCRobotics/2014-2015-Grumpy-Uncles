@@ -74,7 +74,8 @@ class motorCommander {
 
 		uint8_t sen_pins[NUM_SENSORS];
 		unsigned int sen_values[NUM_SENSORS];
-		LineSensors sen_bar;
+		LineSensors F_sen_bar;
+		LineSensors R_sen_bar;
 
 		void set_throttle() {
 			throttle = map(analogRead(throttle_pin), 0, 1023, 0, 255);
@@ -117,7 +118,8 @@ class motorCommander {
 			right_front.attach( 8, 10);
 			right_rear.attach (12, 11);
 
-			sen_bar.init();
+			F_sen_bar.init(0);
+			R_sen_bar.init(1);
 		}
 
 		void set_direction(dir::Cardinal new_direction) {
@@ -204,44 +206,59 @@ class motorCommander {
 			//
 			// this waits for the robot to move past a black line
 			do {
-				sen_bar.poll_sensors();
-			} while(!sen_bar.white(0) || !sen_bar.white(7));
+				R_sen_bar.poll_sensors();
+			} while(!R_sen_bar.white(0) || !R_sen_bar.white(7));
 			
+		Serial.println("Moved passed black line");
 			short distance_moved;
 			do {
 head_of_loop:
 				current = (odo_left.read() + odo_right.read())/2;
 				distance_moved = abs(current-odo_old);
-				sen_bar.poll_sensors();
+				Serial.print("Distance Moved: ");
+				Serial.print(distance_moved, DEC);
+				F_sen_bar.poll_sensors();
+				R_sen_bar.poll_sensors();
 				//Robot is on the black line and is center
-				if (sen_bar.white(2) & sen_bar.white(5)){
-					if (!sen_bar.white(3) && !sen_bar.white(4)){
+				if (R_sen_bar.white(2) & R_sen_bar.white(5)){
+					if (!R_sen_bar.white(3) && !R_sen_bar.white(4)){
 						left_front.go_forward(throttle);
 						left_rear.go_forward(throttle);
 						right_front.go_forward(throttle);
 						right_rear.go_forward(throttle);
+						Serial.println("Going forward");
 					}
 				//Robot is off course and needs to correct right
-				} else if (!sen_bar.white(5)){
+				} else if (!R_sen_bar.white(5)){
 					right_front.go_forward(throttle * FAST_SCALING);
 					right_rear.go_forward(throttle * FAST_SCALING);
 					left_front.go_forward(throttle * SLOW_SCALING);
 					left_rear.go_forward(throttle * SLOW_SCALING);
+					Serial.println("Drifting right");
 				//Robot is off course and needs to correct left
-				} else if (!sen_bar.white(2)){
+				} else if (!R_sen_bar.white(2)){
 					left_front.go_forward(throttle * FAST_SCALING);
 					left_rear.go_forward(throttle * FAST_SCALING);
 					right_front.go_forward(throttle * SLOW_SCALING);
 					right_rear.go_forward(throttle * SLOW_SCALING);
+					Serial.println("Drifting left");
 				}
 
 				if (distance_moved < (one_foot * .9)){
+					Serial.print(" < ");
+					Serial.println((one_foot * .9), DEC);
 					goto head_of_loop;
+				} else if (distance_moved > one_foot){
+					STOP();
 				}
-			} while ((sen_bar.white(0) || sen_bar.white(7)));
+				//Serial.println(" > one_foot");
+					
+			} while ((!R_sen_bar.white(0) || !R_sen_bar.white(7)) && (F_sen_bar.white(0) || F_sen_bar.white(7)));
 				
 			//Robot is back to black line and has moved forward a square
+			Serial.println("Back to black line");
 			STOP();
+			Serial.println("Stopped");
 		}
 
 		void TURN_LEFT() {
@@ -279,27 +296,33 @@ head_of_loop:
 //			Serial.print(speed_rear, DEC);
 //			Serial.println();
 
-			do {
+			bool on_white_check = false;
+			for (;;){
+
 				current_l = odo_left.read();
 				current_r = odo_right.read();
-				
-				if (stop_l == false
-				&& abs(current_l - old_l) >= quarter_turn) {
-					left_front.stop();
-					left_rear.stop();
-					stop_l = true;
+
+				if (F_sen_bar.white(4)){
+					//moved off of black line in front of robot
+					on_white_check = true;
+				} else if (!F_sen_bar.white(3) && on_white_check){
+					if (!R_sen_bar.white(0) && !R_sen_bar.white(7)){
+						//We have turned and are back on the black line
+						STOP();
+						break; //exit loop, we have turned
+					}
+				} else{
+					//line sensors didn't work properly
+					//use decoders
+					if ((abs(current_l - old_l) >= quarter_turn) || 
+					    (abs(current_r - old_r) >= quarter_turn)){
+						STOP();
+						break; //exit loop, we have turned
+					}
 				}
-				if (stop_r == false
-				&& abs(current_r - old_r) >= quarter_turn) {
-					right_front.stop();
-					right_rear.stop();
-					stop_r = true;
-				}
-			} while (!stop_l ||  !stop_r);
+			}
 
 			current_direction--;
-
-			STOP();
 		}
 
 		void TURN_RIGHT() {
@@ -334,28 +357,30 @@ head_of_loop:
 //			Serial.print(speed_rear, DEC);
 //			Serial.println();
 
-
-			do {
-				current_l = odo_left.read();
-				current_r = odo_right.read();
-
-				if (stop_l == false
-				&& abs(current_l - old_l) >= quarter_turn) {
-					left_front.stop();
-					left_rear.stop();
-					stop_l = true;
+			bool on_white_check = false;
+			for (;;){
+				if (F_sen_bar.white(4)){
+					//moved off of black line in front of robot
+					on_white_check = true;
+				} else if (!F_sen_bar.white(4) && on_white_check){
+					if (!R_sen_bar.white(0) && !R_sen_bar.white(7)){
+						//We have turned and are back on the black line
+						STOP();
+						break; //exit loop, we have turned
+					}
+				} else{
+					//line sensors didn't work properly
+					//use decoders
+					if ((abs(current_l - old_l) >= quarter_turn) || 
+					    (abs(current_r - old_r) >= quarter_turn)){
+						STOP();
+						break; //exit loop, we have turned
+					}
 				}
-				if (stop_r == false
-				&& abs(current_r - old_r) >= quarter_turn) {
-					right_front.stop();
-					right_rear.stop();
-					stop_r = true;
-				}
-			} while (!stop_l ||  !stop_r);
+			}
 
 			current_direction++;
-			
-			STOP();       
+			  
 		}
 
 		int get_odo_left() {

@@ -25,21 +25,37 @@ class LineSensors {
 	public:
 		static const unsigned char LINE_FULL = 0xFF;
 		LineSensors() {
-			//set_calibration(cMinOn,cMaxOn,cMinOff,cMaxOff);
-			pins[0] = 14;	sensor_values[0] = 0;
-			pins[1] = 15;	sensor_values[1] = 0;
-			pins[2] = 16;	sensor_values[2] = 0;
-			pins[3] = 17;	sensor_values[3] = 0;
-			pins[4] = 18;	sensor_values[4] = 0;
-			pins[5] = 19;	sensor_values[5] = 0;
-			pins[6] = 34;	sensor_values[6] = 0;
-			pins[7] = 35;	sensor_values[7] = 0;
+			//default constructor
+			//used to set pins up here, moved to init so pins can be set per bar
 		}
-
 		#define NUM_SENSORS 8
 		#define TIMEOUT     2500	// good value found in QTR library
 		#define EMITTER_PIN QTR_NO_EMITTER_PIN
-		void init(int constructed_threshold = TIMEOUT){
+		void init(int set, int constructed_threshold = TIMEOUT){
+			//FRONT
+			//NEED PIN VALUES BELOW FOR NEW FRONT SENSOR BAR
+			if (set = 0){
+				//set_calibration(cMinOn,cMaxOn,cMinOff,cMaxOff);
+				pins[0] = 14;	sensor_values[0] = 0;
+				pins[1] = 15;	sensor_values[1] = 0;
+				pins[2] = 16;	sensor_values[2] = 0;
+				pins[3] = 17;	sensor_values[3] = 0;
+				pins[4] = 18;	sensor_values[4] = 0;
+				pins[5] = 19;	sensor_values[5] = 0;
+				pins[6] = 34;	sensor_values[6] = 0;
+				pins[7] = 35;	sensor_values[7] = 0;
+			} else {
+			//REAR
+				//set_calibration(cMinOn,cMaxOn,cMinOff,cMaxOff);
+				pins[0] = 14;	sensor_values[0] = 0;
+				pins[1] = 15;	sensor_values[1] = 0;
+				pins[2] = 16;	sensor_values[2] = 0;
+				pins[3] = 17;	sensor_values[3] = 0;
+				pins[4] = 18;	sensor_values[4] = 0;
+				pins[5] = 19;	sensor_values[5] = 0;
+				pins[6] = 34;	sensor_values[6] = 0;
+				pins[7] = 35;	sensor_values[7] = 0;
+			}
 			bar.init(pins, NUM_SENSORS, constructed_threshold, EMITTER_PIN);
 			//	bar.calibrate();
 			threshold = constructed_threshold;

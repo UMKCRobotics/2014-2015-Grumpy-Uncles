@@ -7,6 +7,7 @@
 #include <line_sensor.h>
 #include <motorCommander.h>
 #include <arduinoConfig.h>
+#include <Arduino.h>
 
 //For our robot we will be using the i.Mx6's hardware SPI 2
 //  which is connected to pins
@@ -24,7 +25,11 @@ Configurator configuration;
 
 QTRSensorsRC bar;
 unsigned int values[NUM_SENSORS];
+// rear bar (backwards)
 uint8_t pins[NUM_SENSORS] = { 14, 15, 16, 17, 18, 19, 34, 35 };
+
+// front bar
+//uint8_t pins[NUM_SENSORS] = {43, 45, 47, 42, 44, 46, 29, 28};
 
 void setup() {
     // the SPI device must come up before the LEDs are used.
@@ -34,7 +39,7 @@ void setup() {
     
     Serial.begin(115200);
     pinMode(A3, INPUT);
-    mc.init();
+//    mc.init();
     bar.init(pins, NUM_SENSORS, TIMEOUT, QTR_NO_EMITTER_PIN);
 
     // indicate that we're up and waiting on sync.
@@ -71,19 +76,19 @@ void loop() {
                 // move_forward accepts a boolean to control line_following
                 //    true: use drift adjustments
                 //    false: ignore the line_sensor and adjustments.
-                mc.MOVE_FORWARD(false);
+//                mc.MOVE_FORWARD(false);
                 break;
             case 's':
-                mc.MOVE_BACKWARD();
+//                mc.MOVE_BACKWARD();
                 break;
             case 'a':
-                mc.TURN_LEFT();
+//                mc.TURN_LEFT();
                 break;
             case 'd':
-                mc.TURN_RIGHT();
+//                mc.TURN_RIGHT();
                 break;
             case 'x':
-                mc.STOP();
+//                mc.STOP();
                 break;
             default:
                 break;
@@ -130,11 +135,11 @@ void loop() {
     bar.read(values);
     Serial.print("  [ ");
     for (int i = 0; i < 8; i++) {
-        if (values[i] > 1800) {
-            Serial.print(1, DEC);
-        } else {
-            Serial.print(0, DEC);
-        }
+//        if (values[i] > 1800) {
+            Serial.print(values[i], DEC);
+//        } else {
+//            Serial.print(0, DEC);
+//        }
         Serial.print(" ");
     }
 
