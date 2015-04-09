@@ -1,92 +1,92 @@
+#ifndef ARDUINOIF_H
+#define ARDUINOIF_H
+
 #include <fstream>
 #include <string>
 
 #include "Navigation.h"
+#include "serialib.h"
+
+#define sectoms(s) (1000 * s)
 
 class ArduinoInterface {
 	private:
-		std::ifstream ar_in;
-		std::ofstream ar_out;
+		serialib arduino;
+		unsigned int timeout;
+		unsigned int baud;
 
-		char OP_START;
-		char OP_MAZE;
+		char call;
+		char response;
+
 	public:
+		static const char OP_MOVE  = 'm';
+		static const char OP_OK    = 'o';
+		static const char OP_SYN   = 's';
+		static const char OP_ACK   = 'a';
+		static const char OP_RESET = 'r';
+
 		ArduinoInterface(std::string serialport) {
-			OP_START = 0xFF;
-			OP_MAZE = 0xFE;
-			// connect to serialport
-			//    baud 115200 -- do NOT change this!
-		//	ar_in.open(serialport);
-		//	ar_out.open(serialport);
+			// set the time out. timeout expects milliseconds
+			timeout = (sectoms(6));
 
-			// or, in C:
-			// this will open the file as read/write in a single
-			//    file descriptor.
-			/*
-			 * int arduino = open(serialport.c_str(), O_RDWR);
-			 *
-			 */
+			// baud rate. Udoo seems to prefer 115200.
+			baud = 115200;
 
-			// would probably be better to just use a third-party
-			//    serial library that can handle this. Connor gave
-			//    me a link to libserial(?). Will look into it.
-
-		}
-
-		// used in part 1
-		void start() {
-			serialWriteBytes(1, &OP_START);
-			// light GREEN and return nextCell as 64. this value
-			//    could be interpreted internally as the OP_START.
-			//
-			// I'm hoping that the 0xFF value (or just 0x3F) can
-			//    be reserved for this functionality.
-		}
-
-		// used in part 2
-		void runMaze() {
-			serialWriteBytes(1, &OP_MAZE);
-			// light GREEN and return nextCell as 63.
-			//
-			// I'm hoping that the value 0xFE (or just 0x3E) can
-			//    be reserved for this functionality.
-		}
-
-		int serialReadBytes(int count) {
-			// read bytes until count hits 0.
-			// return number of bytes read
-			return (count);
-		}
-
-		int serialWriteBytes(int count, char* output) {
-			// write bytes until count hits 0?
-			// write bytes until char array hits end?
-			//
-			// maybe this should be overloaded to handle
-			//    different data types?
-
-			// return number of bytes written
-			return (count);
-		}
-
-		void moveCardinal(char cardinal) {
-			switch(cardinal) {
-				case 'S':
-					break;
-				case 'E':
-					break;
-				case 'W':
-					break;
-				case 'N':
-					break;
-				default:
-					std::cerr << "ARD_IF :: move_cardinal --> bad instruction: "
-							  << cardinal << " not understood. SKIPPING\n";
-					break;
+			if((arduino.Open(serialport.c_str(), baud)) != 1) {
+				std::cerr << "ARD_IF :: cannot open arduino device: " \
+				          << serialport << std::endl;
+				std::cerr << "ARD_IF :: this is very fatal. bailing.\n";
+				exit(41);
 			}
 		}
 
+		~ArduinoInterface() {
+			arduino.Close();
+		}
+
+		// ALL READS WILL BLOCK. make sure that you are
+		//    aware of this before you use this function.
+		char readByte() {
+			do {
+				response = arduino.ReadChar(&call, timeout);
+				// return values:
+				// 
+				//    -1 : failure
+				//     0 : timeout
+				//     1 : success
+			} while (response <= 0);
+
+			return(call);
+		}
+
+		void writeByte(char message) {
+			arduino.WriteChar(message);
+		}
+
+		// no idea if this will work. but I think the idea
+		//    is solid.
+		// also not sure if this is even needed.
+		void sync() {
+			writeByte(OP_SYN);
+			while((readByte()) != OP_ACK);
+			// a better way to do this is time out,
+			//    flush the line if possible and then
+			//    restart from the top of sync()
+			std::cerr << "ARD_IF :: sync --> SYNC achieved. proceed.\n";
+		}
+
+		void moveCardinal(char cardinal) {
+			this->writeByte(cardinal);
+			do {
+				call = this->readByte();
+				// until the lower half says it's ok,
+				//    we don't do anything.
+			} while(call != OP_OK);
+		}
+
 		void proceed() {
-			serialWriteBytes(1, &OP_START);
+			this->writeByte(OP_MOVE);
 		}
 };
+
+#endif // ARDUINOIF_H

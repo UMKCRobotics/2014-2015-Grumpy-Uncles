@@ -135,12 +135,13 @@ class QTRSensors
 
     };
 
-    void init(unsigned char *pins, unsigned char numSensors, unsigned char emitterPin);
+    void init(const unsigned char *pins, unsigned char numSensors, unsigned char emitterPin);
 
-    unsigned char *_pins;
+    unsigned char _pins[8];
     unsigned char _numSensors;
     unsigned char _emitterPin;
     unsigned int _maxValue; // the maximum value returned by this function
+	int last_value;
 
   private:
 
@@ -166,7 +167,7 @@ class QTRSensorsRC : public QTRSensors
     QTRSensorsRC();
 
     // this constructor just calls init()
-    QTRSensorsRC(unsigned char* pins, unsigned char numSensors,
+    QTRSensorsRC(const unsigned char* pins, unsigned char numSensors,
           unsigned int timeout = 4000, unsigned char emitterPin = 255);
 
     // The array 'pins' contains the Arduino pin number for each sensor.
@@ -189,7 +190,7 @@ class QTRSensorsRC : public QTRSensors
     // modules.  If you are using a 1RC (i.e. if there is no emitter pin),
     // or if you just want the emitters on all the time and don't want to
     // use an I/O pin to control it, use a value of 255 (QTR_NO_EMITTER_PIN).
-    void init(unsigned char* pins, unsigned char numSensors,
+    void init(const unsigned char* pins, unsigned char numSensors,
           unsigned int timeout = 2000, unsigned char emitterPin = QTR_NO_EMITTER_PIN);
 
 
@@ -217,7 +218,7 @@ class QTRSensorsAnalog : public QTRSensors
     QTRSensorsAnalog();
 
     // this constructor just calls init()
-    QTRSensorsAnalog(unsigned char* pins,
+    QTRSensorsAnalog(const unsigned char* pins,
         unsigned char numSensors, unsigned char numSamplesPerSensor = 4,
         unsigned char emitterPin = 255);
 
@@ -244,7 +245,7 @@ class QTRSensorsAnalog : public QTRSensors
     // modules.  If you are using a 1RC (i.e. if there is no emitter pin),
     // or if you just want the emitters on all the time and don't want to
     // use an I/O pin to control it, use a value of 255 (QTR_NO_EMITTER_PIN).
-    void init(unsigned char* analogPins, unsigned char numSensors,
+    void init(const unsigned char* analogPins, unsigned char numSensors,
         unsigned char numSamplesPerSensor = 4, unsigned char emitterPin = QTR_NO_EMITTER_PIN);
 
 

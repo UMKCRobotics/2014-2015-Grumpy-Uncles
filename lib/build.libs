@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+echo    "building platform-dependent libraries:"
+echo    "   - wait_for_usb"
+echo    "   - serialib"
+echo    ""
+if [ ! -d "lib" ]; then
+	mkdir lib
+fi
+
+echo -n "wait_for_usb: "
+gcc -c usb/wait_for_usb.c -o ./wait.o
+ar rsc ./libwait.a ./wait.o
+rm ./wait.o
+echo    "done"
+
+echo -n "serialib: "
+g++ -I include -c serial/serialib.cpp -o ario.o
+ar rsc ./libario.a ./ario.o
+rm ./ario.o
+echo    "done"

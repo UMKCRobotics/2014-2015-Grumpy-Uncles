@@ -1,0 +1,4 @@
+KERNEL=="ttymxc3",  MODE="0664", GROUP="intserial", SYMLINK+="arduino"
+KERNEL=="spidev0.0", SUBSYSTEMS=="spidev", MODE="0660", GROUP="intserial", SYMLINK+="spi1"
+KERNEL=="spidev1.0", SUBSYSTEMS=="spidev", MODE="0660", GROUP="intserial", SYMLINK+="billboard"
+KERNEL=="spidev4.0", SUBSYSTEMS=="spidev", MODE="0660", GROUP="intserial", SYMLINK+="spi5"
